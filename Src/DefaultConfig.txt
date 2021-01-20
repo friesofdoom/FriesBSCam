@@ -1,0 +1,4 @@
+GlobalBias='20'
+Camera={
+	Binding='playerWaist'
+	Offset={
