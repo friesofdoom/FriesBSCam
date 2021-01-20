@@ -5,13 +5,41 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FriesBSCam", "FriesBSCam.csproj", "{09F7466F-7007-49E6-BBE2-C81718554523}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Plugin|Any CPU = Plugin|Any CPU
 		Plugin|x64 = Plugin|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Debug|Any CPU.ActiveCfg = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Debug|Any CPU.Build.0 = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Debug|x64.ActiveCfg = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Debug|x64.Build.0 = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Plugin|Any CPU.ActiveCfg = Plugin|x64
 		{09F7466F-7007-49E6-BBE2-C81718554523}.Plugin|x64.ActiveCfg = Plugin|x64
 		{09F7466F-7007-49E6-BBE2-C81718554523}.Plugin|x64.Build.0 = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Release|Any CPU.ActiveCfg = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Release|Any CPU.Build.0 = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Release|x64.ActiveCfg = Plugin|x64
+		{09F7466F-7007-49E6-BBE2-C81718554523}.Release|x64.Build.0 = Plugin|x64
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Plugin|Any CPU.ActiveCfg = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Plugin|Any CPU.Build.0 = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Plugin|x64.ActiveCfg = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Plugin|x64.Build.0 = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{C6979D96-2A9A-475C-AA96-BA8D8616B3AB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

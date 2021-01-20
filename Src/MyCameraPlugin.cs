@@ -50,15 +50,15 @@ public class MyCameraPlugin : IPluginCameraBehaviour {
 
     // ID is used for the camera behaviour identification when the behaviour is selected by the user.
     // It has to be unique so there are no plugin collisions.
-    public string ID => "MyCameraPlugin";
+    public string ID => "FriesBSCameraPlugin";
     // Readable plugin name "Keep it short".
-    public string name => "My Camera";
+    public string name => "Fries BS Camera";
     // Author name.
     public string author => "fries";
     // Plugin version.
     public string version => "1.0";
-    // Localy store the camera helper provided by LIV.
 
+    // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
     float _elaspedTime;
 
@@ -163,12 +163,12 @@ public class MyCameraPlugin : IPluginCameraBehaviour {
                     {
                         Vector3[] offsets =
                         {
-                            -Vector3.right * 0.25f +Vector3.right * 0.5f -Vector3.forward * 2.0f +Vector3.up * 1.3f,
-                            -Vector3.right * 0.25f -Vector3.forward * 2.0f +Vector3.up * 2.0f,
-                            -Vector3.right * 0.25f -Vector3.right * 1.0f -Vector3.forward * 2.0f +Vector3.up * 1.3f,
+                            Vector3.right * 0.5f  -Vector3.forward * 2.0f +Vector3.up * 1.3f,
+                                                  -Vector3.forward * 2.0f +Vector3.up * 2.0f,
+                            -Vector3.right * 1.0f -Vector3.forward * 2.0f +Vector3.up * 1.3f,
 
-                            -Vector3.right * 0.0f +Vector3.right * 1.0f -Vector3.forward * 2.0f,
-                            -Vector3.right * 0.0f -Vector3.right * 1.5f -Vector3.forward * 2.0f,
+                            Vector3.right * 1.0f -Vector3.forward * 2.0f,
+                            -Vector3.right * 1.5f -Vector3.forward * 2.0f,
                         };
 
                         Vector3[] lookats =
