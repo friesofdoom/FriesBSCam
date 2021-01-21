@@ -1,6 +1,7 @@
 # FriesBSCam
 Beat saber camera for Liv made by fries.\
-This plugin will smoothly blend between any number of pre-defined cameras, both static and orbital.
+This plugin will smoothly blend between any number of pre-defined cameras, both static and orbital.\
+Feel free to use and/or modify this plugin how ever you want. No credit required. But if you do want to thank me, drop a link to my YouTube channel somewhere in your video description - https://www.youtube.com/channel/UCrQWyvE44R5G6_Ho88OfQYA
 
 Copy the dll file into:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\\\
