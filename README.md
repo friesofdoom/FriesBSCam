@@ -1,8 +1,10 @@
 # FriesBSCam
 Beat saber camera for Liv made by fries
 
-Copy the dll file into <...>\Documents\LIV\Plugins\CameraBehaviours\\\
-After you use the camera for the first time, it will create a settings file in <...>\Documents\LIV\Plugins\CameraBehaviours\FriesBSCam\\\
+Copy the dll file into:
+    <...>\Documents\LIV\Plugins\CameraBehaviours\\\
+After you use the camera for the first time, it will create a settings file in
+    <...>\Documents\LIV\Plugins\CameraBehaviours\FriesBSCam\\\
 You can then modify the settings to suit your purpose.
 
 # Settings
