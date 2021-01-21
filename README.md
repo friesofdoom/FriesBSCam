@@ -13,7 +13,7 @@ You can then modify the settings to suit your purpose.
 # Settings
 GlobalBias='0.0' 
 This rotates the camera around the y-axis in oder to move the avatar slightly to the left or right
-This is used if you have something like a first person view on the left or the right of your video feed, then you will want to move the avatar in the opposite direction slightly.
+This is used if you have something like a first person view on the left or the right of your video feed, then you will want to move the avatar in the opposite direction slightly. I use a value of -15.0 to move my avatar slightly to the right.
 
 Camera={ ... }\
 This creates a new camera with the following properties:
