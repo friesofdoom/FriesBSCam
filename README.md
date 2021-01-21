@@ -13,7 +13,7 @@ This rotates the camera around the y-axis in oder to move the avatar slightly to
 This is used if you have something like a first person view on the left or the right of your video feed, then you will want to move the avatar in the opposite direction slightly.
 
 Camera={ ... }\
-This created a new camera with the following properties:
+This creates a new camera with the following properties:
 
 Name='CameraName'\
 The name of the camera.
@@ -41,10 +41,10 @@ Look-At direction if the camera is a LookAt camera Type\
 Look-At bone binding offset of the camera is an Obrital Type.
 
 MinTime='4.0' \
-Minimum time that this camera is avtive for
+Minimum time that this camera is active for
 
 MaxTime='8.0' \
-Maximum time that this camera is avtive for
+Maximum time that this camera is active for
 	
 	
 	
