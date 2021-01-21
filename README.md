@@ -4,11 +4,15 @@ This plugin will smoothly blend between any number of pre-defined cameras, both 
 
 Feel free to use and/or modify this plugin how ever you want. No credit required. But if you do want to thank me, drop a link to my YouTube channel somewhere in your video description - https://www.youtube.com/channel/UCrQWyvE44R5G6_Ho88OfQYA
 
+# Installation Instructions 
 Copy the dll file into:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\\\
 After you use the camera for the first time, it will create a settings file in:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\FriesBSCam\\\
 You can then modify the settings to suit your purpose.
+
+# Use
+Select your camera in LIV. Change it to plugin camera. Select FriesBSCam at the bottom.
 
 # Settings
 GlobalBias='0.0' 
