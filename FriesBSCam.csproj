@@ -7,8 +7,8 @@
     <ProjectGuid>{09F7466F-7007-49E6-BBE2-C81718554523}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MyPluginCameraBehaviour</RootNamespace>
-    <AssemblyName>MyPluginCameraBehaviour</AssemblyName>
+    <RootNamespace>FriesBSCameraPlugin</RootNamespace>
+    <AssemblyName>FriesBSCameraPlugin</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
