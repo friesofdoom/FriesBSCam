@@ -1,16 +1,24 @@
 # FriesBSCam
-Beat saber camera for Liv made by fries
+Beat saber camera for Liv made by fries.\
+This plugin will smoothly blend between any number of pre-defined cameras, both static and orbital.
 
+Feel free to use and/or modify this plugin how ever you want. No credit required. But if you do want to thank me, drop a link to my YouTube channel somewhere in your video description - https://www.youtube.com/channel/UCrQWyvE44R5G6_Ho88OfQYA
+
+# Installation Instructions 
+Download the DLL from the assets in the latest release - https://github.com/friesofdoom/FriesBSCam/releases/ \
 Copy the dll file into:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\\\
 After you use the camera for the first time, it will create a settings file in:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\FriesBSCam\\\
 You can then modify the settings to suit your purpose.
 
+# Use
+Select your camera in LIV. Change it to plugin camera. Select FriesBSCam at the bottom.
+
 # Settings
 GlobalBias='0.0' 
 This rotates the camera around the y-axis in oder to move the avatar slightly to the left or right
-This is used if you have something like a first person view on the left or the right of your video feed, then you will want to move the avatar in the opposite direction slightly.
+This is used if you have something like a first person view on the left or the right of your video feed, then you will want to move the avatar in the opposite direction slightly. I use a value of -15.0 to move my avatar slightly to the right.
 
 Camera={ ... }\
 This creates a new camera with the following properties:
