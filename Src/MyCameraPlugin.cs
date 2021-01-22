@@ -83,6 +83,10 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     {
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string outputLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
+
+        // Create the directory in the off-chance that it doesn't exist.
+        Directory.CreateDirectory(outputLoc);
+
         outputLoc = Path.Combine(outputLoc, "output.txt");
         logStream = new StreamWriter(outputLoc);
 
@@ -99,7 +103,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     public static void Log(string s)
     {
-        if (false)
+        if (true)
         {
             logStream.WriteLine(s);
             logStream.Flush();

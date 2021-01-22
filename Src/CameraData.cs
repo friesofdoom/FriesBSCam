@@ -26,14 +26,25 @@ public class CameraData
     public float MinTime;
     public float MaxTime;
 
+    public Vector3 SmoothedPositionBinding = Vector3.zero;
+    public Vector3 SmoothedLookAtBinding = Vector3.zero;
+
     public Vector3 EvaluatePositionBinding(PluginCameraHelper helper)
     {
-        return EvaluateBinding(helper, PositionBinding) + PositionOffset;
+        var newPos = EvaluateBinding(helper, PositionBinding) + PositionOffset;
+
+        var filter = 0.05f;
+        SmoothedPositionBinding = SmoothedPositionBinding * (1.0f - filter) + newPos * filter;
+        return SmoothedPositionBinding;
     }
 
     public Vector3 EvaluateLookAtBindingBinding(PluginCameraHelper helper)
     {
-        return EvaluateBinding(helper, LookAtBinding) + LookAt;
+        var newLookat = EvaluateBinding(helper, LookAtBinding) + LookAt;
+
+        var filter = 0.05f;
+        SmoothedLookAtBinding = SmoothedLookAtBinding * (1.0f - filter) + newLookat * filter;
+        return SmoothedLookAtBinding;
     }
 
     Vector3 EvaluateBinding(PluginCameraHelper helper, string binding)
@@ -61,9 +72,6 @@ public static class CameraPluginSettings
     {
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string settingLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
-
-        // Create the directory in the off-chance that it doesn't exist.
-        Directory.CreateDirectory(settingLoc);
 
         settingLoc = Path.Combine(settingLoc, "settings.txt");
 
@@ -105,7 +113,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	Name='BottomRight'");
                 ws.WriteLine("	Type='LookAt'");
                 ws.WriteLine("	PositionBinding='playerWaist'");
-                ws.WriteLine("	PositionOffset={x='1.0', y='0.0', z='-2.0'} ");
+                ws.WriteLine("	PositionOffset={x='0.75', y='0.0', z='-2.0'} ");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'}  ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
@@ -114,7 +122,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	Name='BottomLeft'");
                 ws.WriteLine("	Type='LookAt'");
                 ws.WriteLine("	PositionBinding='playerWaist'");
-                ws.WriteLine("	PositionOffset={x='-1.0', y='0.0', z='-2.0'}  ");
+                ws.WriteLine("	PositionOffset={x='-0.75', y='0.0', z='-2.0'}  ");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
