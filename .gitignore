@@ -2,6 +2,4 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/bin
 /.vs/FriesBSCam/v16
-/obj/x64/Plugin

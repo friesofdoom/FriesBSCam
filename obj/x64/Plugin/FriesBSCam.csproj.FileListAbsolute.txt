@@ -1,0 +1,7 @@
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\bin\FriesBSCameraPlugin.dll
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\bin\Newtonsoft.Json.dll
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\bin\websocket-sharp.dll
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\obj\x64\Plugin\FriesBSCam.csprojAssemblyReference.cache
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\obj\x64\Plugin\FriesBSCam.csproj.CoreCompileInputs.cache
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\obj\x64\Plugin\FriesBSCam.csproj.CopyComplete
+C:\Users\sepfy\Nextcloud\Code\FriesBSCam\obj\x64\Plugin\FriesBSCameraPlugin.dll
