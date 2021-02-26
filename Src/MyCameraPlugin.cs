@@ -34,7 +34,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Invoke ApplySettings event when you need to save your settings.
     // Do not invoke event every frame if possible.
     public event EventHandler ApplySettings;
-    private BeatSaberStatus BS;
+    private BeatSaberStatus beatSaberStatus;
 
     // ID is used for the camera behaviour identification when the behaviour is selected by the user.
     // It has to be unique so there are no plugin collisions.
@@ -44,7 +44,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Author name.
     public string author => "fries";
     // Plugin version.
-    public string version => "1.1.3";
+    public string version => "1.2.0";
 
     // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
@@ -105,7 +105,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
         _helper = helper;
 
-        BS = new BeatSaberStatus();
+        beatSaberStatus = new BeatSaberStatus();
 
         _helper.UpdateFov(60.0f);
         UpdateCameraChange();
@@ -178,16 +178,16 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 if (useHttpStatus)
                 {
                     // If HTTPStatus is available, see if we can extract some of the song details
-                    Log("Song Name: " + BS.songName);
-                    Log("Song SubName: " + BS.songSubName);
-                    Log("Song AuthorName: " + BS.songAuthorName);
-                    Log("Level Author: " + BS.levelAuthorName);
-                    Log("Song Hash: " + BS.songHash);
-                    Log("Level ID: " + BS.levelId);
+                    Log("Song Name: " + beatSaberStatus.songName);
+                    Log("Song SubName: " + beatSaberStatus.songSubName);
+                    Log("Song AuthorName: " + beatSaberStatus.songAuthorName);
+                    Log("Level Author: " + beatSaberStatus.levelAuthorName);
+                    Log("Song Hash: " + beatSaberStatus.songHash);
+                    Log("Level ID: " + beatSaberStatus.levelId);
 
                     // We need to check to see if there is a song-specific settings file, and if so, load that instead
                     Log("Checking to see if there are song-specific Settings");
-                    CameraPluginSettings.LoadSettings("settings." + BS.songHash + ".txt");
+                    CameraPluginSettings.LoadSettings("settings." + beatSaberStatus.songHash + ".txt");
 
                     if (CameraPluginSettings.SongSpecific)
                     {
@@ -200,7 +200,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             }
         }
 
-        if (useHttpStatus && BS.paused)
+        if (useHttpStatus && beatSaberStatus.paused)
         {
             //We're paused, don't do anything
         }
@@ -213,45 +213,63 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
             if (transitionToMenu)
             {
+                // Transition to the Menu Camera and mark that we've done so. Update currentCameraIndex to -1 so we don't skip over Index 0 when we move to another camera
+                Log("Preparing to change to Menu Camera");
                 transitionToMenu = false;
-                currentCameraIndex = 0;
-                
-                //currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
-                //currentCameraType = currentCameraData.Type;
-
-                // I hate that this is hardcoded but unless we add a specific 'menu' camera in the base settings file it'll have to do for now
-                currentCameraData = new CameraData();
-                currentCameraData.Name = "MenuCamera";
-                currentCameraData.Type = CameraType.LookAt;
-                currentCameraData.PositionBinding = "playerWaist";
-                currentCameraData.PositionOffset = new Vector3(2.0f, 1.0f, -3.0f);
-                currentCameraData.LookAt = new Vector3(-2.0f, 0.0f, 5.0f);
-                currentCameraType = currentCameraData.Type;
-                
+                currentCameraIndex = -1;
+                currentCameraData = CameraPluginSettings.MenuCamera;
+                currentCameraType = currentCameraData.Type;                
             }
             else
             {
+                Log("Preparing to change to new Game Camera, currentCameraIndex = " + currentCameraIndex.ToString());
                 if (CameraPluginSettings.SongSpecific)
                 {
-                    // Increment camera by 1
+                    Log("Song specific settings file active, increment to next camera");
+                    // Increment camera by 1 but make sure we don't skip over index 0 now
                     if (newCameraIndex < CameraPluginSettings.CameraDataList.Count)
                         newCameraIndex++;
                 }
                 else
                 {
-                    // Don't pick the same camera again for a few times
-                    while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
+                    Log("Default settings file active, preparing to pick next camera");
+                    // If we don't have enough cameras to truly randomize...uh...I guess don't
+                    if (CameraPluginSettings.CameraDataList.Count > 2)
                     {
-                        newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
+                        // Don't pick the same camera again for a few times
+                        while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
+                        {
+                            newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
+                        }
+                    }
+                    else if (CameraPluginSettings.CameraDataList.Count == 2)
+                    {
+                        Log("Only 2 cameras available, swapping between them");
+                        // If you've got two cameras switch between them, otherwise just stick with the current one
+                        switch (currentCameraIndex)
+                        {
+                            case 0:
+                                newCameraIndex = 1;
+                                break;
+                            case 1:
+                                newCameraIndex = 0;
+                                break;
+                            default:
+                                newCameraIndex = 0;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        newCameraIndex = 0;
                     }
                 }
 
                 if (previousCameraIndices.Count > 1)
-                {
                     previousCameraIndices.RemoveAt(0);
-                }
 
                 previousCameraIndices.Add(newCameraIndex);
+
                 currentCameraIndex = newCameraIndex;
                 currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
                 currentCameraType = currentCameraData.Type;
@@ -267,9 +285,9 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     var maxTime = currentCameraData.MaxTime;
                     nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
                 }
-            }
 
-            Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString());
+                Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + nextChangeTimer.ToString() + "s");
+            }
 
             switch (currentCameraType)
             {
@@ -324,7 +342,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public void OnUpdate()
     {
         // Allows us to track when HTTPStatus first makes a connecction
-        if (!useHttpStatus && BS.connected)
+        if (!useHttpStatus && beatSaberStatus.connected)
         {
             useHttpStatus = true;
             inMenu = true;
@@ -333,14 +351,14 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
         if (useHttpStatus)
         {
-            if (CameraPluginSettings.Debug && BS.debug.Count > 0)
+            if (CameraPluginSettings.Debug && beatSaberStatus.debug.Count > 0)
             {
                 // Write debug messages from HTTPStatus
-                Log(BS.debug[0]);
-                BS.debug.RemoveAt(0);
+                Log(beatSaberStatus.debug[0]);
+                beatSaberStatus.debug.RemoveAt(0);
             }
 
-            if (BS.menu)
+            if (beatSaberStatus.menu)
             {
                 // This is a silly way to do this but it allows us to keep track of when we transition between menu and game mode
                 // That still seems silly, but when juggling random songs, and song-specific camera update files it is helpful. Maybe.
@@ -353,7 +371,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 // Don't start the timer until we hit our first note, also check for pause
                 // This allows us to have 'synced' song-specific camera files as different systems will load songs at different speeds
                 // based on storage and cpu performance. Just...don't miss the first note I guess?
-                if (BS.score > 0 && !BS.paused)
+                if (beatSaberStatus.score > 0 && !beatSaberStatus.paused)
                     _elapsedTime += Time.deltaTime;
             }
         }

@@ -68,6 +68,7 @@ public static class CameraPluginSettings
     public static bool Debug = false;
 //    public static float BlendSpeed;
     public static List<CameraData> CameraDataList;
+    public static CameraData MenuCamera;
 
     /// <summary>
     /// Loads Default Settings File
@@ -86,14 +87,12 @@ public static class CameraPluginSettings
             using (var ws = new StreamWriter(@settingLoc))
             {
                 ws.WriteLine("GlobalBias='0.0'");
-                ws.WriteLine("Camera={");
+                ws.WriteLine("MenuCamera={");
                 ws.WriteLine("	Name='MenuCamera'");
                 ws.WriteLine("	Type='LookAt'");
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='2.0', y='1.0', z='-3.0'} ");
                 ws.WriteLine("	LookAt={x='-2.0', y='0.0', z='5.0'} ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopRight'");
@@ -179,6 +178,7 @@ public static class CameraPluginSettings
             }
         }
 
+        MenuCamera = new CameraData();
         CameraDataList = new List<CameraData>();
         ParseSettingsFile(@settingLoc);
         SongSpecific = false;
@@ -198,6 +198,7 @@ public static class CameraPluginSettings
         // Check to see if the file exists.
         if (File.Exists(@settingLoc))
         {
+            MenuCamera = new CameraData();
             CameraDataList = new List<CameraData>();
             ParseSettingsFile(@settingLoc);
             SongSpecific = true;
@@ -220,30 +221,54 @@ public static class CameraPluginSettings
 
         GlobalBias = ParseFloat(root.GetChildSafe("GlobalBias"));
         Debug = ParseBool(root.GetChildSafe("Debug"));
-//        BlendSpeed = ParseFloat(root.GetChildSafe("BlendSpeed"));
+        //        BlendSpeed = ParseFloat(root.GetChildSafe("BlendSpeed"));
+
+        // Adding support for a custom MenuCamera if it exists
+        var menuCamera = root.GetChild("MenuCamera");
+        if (menuCamera != null)
+        {
+            MenuCamera = ParseCamera(menuCamera);
+        }
+        else
+        {
+            // Moving Menu Camera 'backup' over here during settings parse time
+            MenuCamera = new CameraData();
+            MenuCamera.Name = "MenuCamera";
+            MenuCamera.Type = CameraType.LookAt;
+            MenuCamera.PositionBinding = "playerWaist";
+            MenuCamera.PositionOffset = new Vector3(2.0f, 1.0f, -3.0f);
+            MenuCamera.LookAt = new Vector3(-2.0f, 0.0f, 5.0f);
+        }
 
         var camera = root.GetChild("Camera");
         while (camera != null)
         {
-            var cameraData = new CameraData();
-            cameraData.Name = camera.GetChildSafe("Name").mValue;
-            cameraData.Type = GetCameraTypeFromToken(camera.GetChildSafe("Type"));
-            cameraData.PositionOffset = GetVector3Token(camera.GetChildSafe("PositionOffset"));
-            cameraData.LookAt = GetVector3Token(camera.GetChildSafe("LookAt"));
-            cameraData.PositionBinding = camera.GetChildSafe("PositionBinding").mValue;
-            cameraData.LookAtBinding = camera.GetChildSafe("LookAtBinding").mValue;
-            cameraData.Distance = ParseFloat(camera.GetChildSafe("Distance"));
-            cameraData.Speed = ParseFloat(camera.GetChildSafe("Speed"));
-            cameraData.MinTime = ParseFloat(camera.GetChildSafe("MinTime"));
-            cameraData.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
-            cameraData.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
-            cameraData.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
-
-            CameraDataList.Add(cameraData);
+            CameraDataList.Add(ParseCamera(camera));
 
             camera = root.GetNextChild(camera);
         }
     }
+
+    public static CameraData ParseCamera(ReflectionToken camera)
+    {
+        CameraData outCamera = new CameraData();
+
+        outCamera.Name = camera.GetChildSafe("Name").mValue;
+        outCamera.Type = GetCameraTypeFromToken(camera.GetChildSafe("Type"));
+        outCamera.PositionOffset = GetVector3Token(camera.GetChildSafe("PositionOffset"));
+        outCamera.LookAt = GetVector3Token(camera.GetChildSafe("LookAt"));
+        outCamera.PositionBinding = camera.GetChildSafe("PositionBinding").mValue;
+        outCamera.LookAtBinding = camera.GetChildSafe("LookAtBinding").mValue;
+        outCamera.Distance = ParseFloat(camera.GetChildSafe("Distance"));
+        outCamera.Speed = ParseFloat(camera.GetChildSafe("Speed"));
+        outCamera.MinTime = ParseFloat(camera.GetChildSafe("MinTime"));
+        outCamera.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
+        outCamera.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
+        outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
+
+        return outCamera;
+    }
+
 
     public static bool ParseBool(ReflectionToken token)
     {

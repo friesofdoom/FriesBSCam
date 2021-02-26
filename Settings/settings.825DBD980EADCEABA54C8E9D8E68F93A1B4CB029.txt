@@ -1,12 +1,10 @@
 GlobalBias='0.0'
-Camera={
+MenuCamera={
 	Name='MenuCam'
 	Type='LookAt'
 	PositionBinding='playerWaist'
 	PositionOffset={x='2.0', y='1.0', z='-3.0'} 
 	LookAt={x='-2.0', y='0.0', z='5.0'} 	
-	ActualTime='3.0' 
-	TransitionTime='0.0' 
 }
 Camera={
 	Name='DiagonalFrontRight'
