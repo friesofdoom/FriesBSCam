@@ -20,9 +20,6 @@ After you use the camera for the first time, it will create a settings file in:\
     <...>\Documents\LIV\Plugins\CameraBehaviours\FriesBSCam\\\
 You can then modify the settings to suit your purpose.
 
-# Known Bugs
-- Needs at least 3 cameras in the settings file or it will crash, this will be fixed in the next release.
-
 # Use
 Select your camera in LIV. Change it to plugin camera. Select FriesBSCam at the bottom.
 
@@ -33,6 +30,9 @@ This is used if you have something like a first person view on the left or the r
 
 Debug='False' or 'True'\
 Optional Parameter that will output debug logs from BeatSaberStatus (HTTPStatus)
+
+MenuCamera= { ... }\
+Optional MenuCamera can be setup when using HTTPStatus. Uses the same properties as a normal Camera (below).
 
 Camera={ ... }\
 This creates a new camera with the following properties:
