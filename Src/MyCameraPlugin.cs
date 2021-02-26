@@ -34,6 +34,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Invoke ApplySettings event when you need to save your settings.
     // Do not invoke event every frame if possible.
     public event EventHandler ApplySettings;
+    private BeatSaberStatus BS;
 
     // ID is used for the camera behaviour identification when the behaviour is selected by the user.
     // It has to be unique so there are no plugin collisions.
@@ -43,13 +44,17 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Author name.
     public string author => "fries";
     // Plugin version.
-    public string version => "1.0";
+    public string version => "1.1.3";
 
     // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
-    float _elaspedTime = 0.0f;
+    float _elapsedTime = 0.0f;
     float nextChangeTimer = 0.0f;
-
+    float transitionTime = 0.0f;
+    bool useHttpStatus = false;
+    bool inMenu = false;
+    bool inGame = false;
+    
     CameraType currentCameraType = CameraType.Orbital;
     CameraData currentCameraData = null;
     System.Random rand = new System.Random();
@@ -74,6 +79,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     public static StreamWriter logStream;
 
+
     // Constructor is called when plugin loads
     public MyCameraPlugin() { }
 
@@ -95,10 +101,15 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         Log("Loading Settings");
         CameraPluginSettings.LoadSettings();
         Log("Done Loading Settings");
+        Log("Camera Count: " + CameraPluginSettings.CameraDataList.Count);
 
         _helper = helper;
+
+        BS = new BeatSaberStatus();
+
         _helper.UpdateFov(60.0f);
         UpdateCameraChange();
+
     }
 
     public static void Log(string s)
@@ -124,31 +135,139 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     public void UpdateCameraChange()
     {
-        if (_elaspedTime >= nextChangeTimer)
+        var transitionToMenu = false;
+
+        // Test if we're in menu/game, or some combination thereof as we may want to do different things based on that
+        // This will always be inMenu = false and inGame = false if there is no HTTPStatus available
+        // inMenu = true and inGame = true occurs when we first load HTTPStatus which should transition you to menu view
+        if (inMenu)
+        {
+            if (inGame)
+            {
+                Log("Transitioning to inMenu");
+                inGame = false;
+                _elapsedTime = 2.0f;
+                nextChangeTimer = 1.0f;
+                transitionToMenu = true;
+
+                // If we previously were in a Song Specific settings file, go back to the default settings file
+                if (CameraPluginSettings.SongSpecific)
+                {
+                    Log("Loading up default settings file");
+                    CameraPluginSettings.LoadSettings();
+                    Log("Done Loading Settings");
+                    Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
+                }
+            }
+            else
+            {
+                // We're still in the menu so reset the timer
+                _elapsedTime = 0.0f;
+                nextChangeTimer = 1.0f;
+            }
+        }
+        else
+        {
+            if (!inGame)
+            {
+                Log("Transitioning to inGame");
+                inGame = true;
+                _elapsedTime = 2.0f;
+                nextChangeTimer = 1.0f;
+
+                if (useHttpStatus)
+                {
+                    // If HTTPStatus is available, see if we can extract some of the song details
+                    Log("Song Name: " + BS.songName);
+                    Log("Song SubName: " + BS.songSubName);
+                    Log("Song AuthorName: " + BS.songAuthorName);
+                    Log("Level Author: " + BS.levelAuthorName);
+                    Log("Song Hash: " + BS.songHash);
+                    Log("Level ID: " + BS.levelId);
+
+                    // We need to check to see if there is a song-specific settings file, and if so, load that instead
+                    Log("Checking to see if there are song-specific Settings");
+                    CameraPluginSettings.LoadSettings("settings." + BS.songHash + ".txt");
+
+                    if (CameraPluginSettings.SongSpecific)
+                    {
+                        Log("Song specific settings found!");
+                        Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
+                    }
+                    else
+                        Log("No song specific settings file found");
+                }
+            }
+        }
+
+        if (useHttpStatus && BS.paused)
+        {
+            //We're paused, don't do anything
+        }
+        else if (_elapsedTime >= nextChangeTimer || transitionToMenu)
         {
             cameraLerpValue = 0.02f;
             Log("New Camera Selection started");
 
             var newCameraIndex = currentCameraIndex;
 
-            // Don't pick the same camera again for a few times
-            while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
+            if (transitionToMenu)
             {
-                newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
-            }
+                transitionToMenu = false;
+                currentCameraIndex = 0;
+                
+                //currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
+                //currentCameraType = currentCameraData.Type;
 
-            if (previousCameraIndices.Count > 1)
+                // I hate that this is hardcoded but unless we add a specific 'menu' camera in the base settings file it'll have to do for now
+                currentCameraData = new CameraData();
+                currentCameraData.Name = "MenuCamera";
+                currentCameraData.Type = CameraType.LookAt;
+                currentCameraData.PositionBinding = "playerWaist";
+                currentCameraData.PositionOffset = new Vector3(2.0f, 1.0f, -3.0f);
+                currentCameraData.LookAt = new Vector3(-2.0f, 0.0f, 5.0f);
+                currentCameraType = currentCameraData.Type;
+                
+            }
+            else
             {
-                previousCameraIndices.RemoveAt(0);
-            }
+                if (CameraPluginSettings.SongSpecific)
+                {
+                    // Increment camera by 1
+                    if (newCameraIndex < CameraPluginSettings.CameraDataList.Count)
+                        newCameraIndex++;
+                }
+                else
+                {
+                    // Don't pick the same camera again for a few times
+                    while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
+                    {
+                        newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
+                    }
+                }
 
-            previousCameraIndices.Add(newCameraIndex);
-            currentCameraIndex = newCameraIndex;
-            currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
-            currentCameraType = currentCameraData.Type;
-            var minTime = currentCameraData.MinTime;
-            var maxTime = currentCameraData.MaxTime;
-            nextChangeTimer = _elaspedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
+                if (previousCameraIndices.Count > 1)
+                {
+                    previousCameraIndices.RemoveAt(0);
+                }
+
+                previousCameraIndices.Add(newCameraIndex);
+                currentCameraIndex = newCameraIndex;
+                currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
+                currentCameraType = currentCameraData.Type;
+
+                if (CameraPluginSettings.SongSpecific)
+                {
+                    nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
+                    transitionTime = currentCameraData.TransitionTime;
+                }
+                else
+                {
+                    var minTime = currentCameraData.MinTime;
+                    var maxTime = currentCameraData.MaxTime;
+                    nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
+                }
+            }
 
             Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString());
 
@@ -204,7 +323,46 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // and has not been updated yet. If that is a concern, it is recommended to use OnLateUpdate instead.
     public void OnUpdate()
     {
-        _elaspedTime += Time.deltaTime;
+        // Allows us to track when HTTPStatus first makes a connecction
+        if (!useHttpStatus && BS.connected)
+        {
+            useHttpStatus = true;
+            inMenu = true;
+            inGame = true;
+        }
+
+        if (useHttpStatus)
+        {
+            if (CameraPluginSettings.Debug && BS.debug.Count > 0)
+            {
+                // Write debug messages from HTTPStatus
+                Log(BS.debug[0]);
+                BS.debug.RemoveAt(0);
+            }
+
+            if (BS.menu)
+            {
+                // This is a silly way to do this but it allows us to keep track of when we transition between menu and game mode
+                // That still seems silly, but when juggling random songs, and song-specific camera update files it is helpful. Maybe.
+                inMenu = true;
+            }
+            else
+            {
+                inMenu = false;
+                
+                // Don't start the timer until we hit our first note, also check for pause
+                // This allows us to have 'synced' song-specific camera files as different systems will load songs at different speeds
+                // based on storage and cpu performance. Just...don't miss the first note I guess?
+                if (BS.score > 0 && !BS.paused)
+                    _elapsedTime += Time.deltaTime;
+            }
+        }
+        else
+        {
+            // No HTTPStatus available so always increment the timer
+            _elapsedTime += Time.deltaTime;
+        }
+
         UpdateCameraPose();
     }
 
@@ -212,7 +370,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     {
         switch (currentCameraType)
         {
-             case CameraType.Orbital:
+            case CameraType.Orbital:
                 {
                     Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
                     Vector3 targetLookAtPosition = currentCameraData.EvaluateLookAtBindingBinding(_helper);
@@ -228,8 +386,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     currentOrbitalAngle += Time.deltaTime * orbitalDirection * currentCameraData.Speed * blendSpeed;
 
                     Vector3 rotationVector = new Vector3(
-                        Mathf.Cos(currentOrbitalAngle), 
-                        0f, 
+                        Mathf.Cos(currentOrbitalAngle),
+                        0f,
                         Mathf.Sin(currentOrbitalAngle));
 
                     TargetCameraPosition = targetPosition + rotationVector * currentOrbitalDistance;
@@ -291,3 +449,4 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     }
 }
+

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public enum CameraType
@@ -25,6 +22,8 @@ public class CameraData
     public float Speed;
     public float MinTime;
     public float MaxTime;
+    public float ActualTime;
+    public float TransitionTime;
 
     public Vector3 SmoothedPositionBinding = Vector3.zero;
     public Vector3 SmoothedLookAtBinding = Vector3.zero;
@@ -65,9 +64,14 @@ public class CameraData
 public static class CameraPluginSettings
 {
     public static float GlobalBias;
+    public static bool SongSpecific;
+    public static bool Debug = false;
 //    public static float BlendSpeed;
-    public static List<CameraData> CameraDataList = new List<CameraData>();
+    public static List<CameraData> CameraDataList;
 
+    /// <summary>
+    /// Loads Default Settings File
+    /// </summary>
     public static void LoadSettings()
     {
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -82,6 +86,15 @@ public static class CameraPluginSettings
             using (var ws = new StreamWriter(@settingLoc))
             {
                 ws.WriteLine("GlobalBias='0.0'");
+                ws.WriteLine("Camera={");
+                ws.WriteLine("	Name='MenuCamera'");
+                ws.WriteLine("	Type='LookAt'");
+                ws.WriteLine("	PositionBinding='playerWaist'");
+                ws.WriteLine("	PositionOffset={x='2.0', y='1.0', z='-3.0'} ");
+                ws.WriteLine("	LookAt={x='-2.0', y='0.0', z='5.0'} ");
+                ws.WriteLine("	MinTime='4.0' ");
+                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopRight'");
                 ws.WriteLine("	Type='LookAt'");
@@ -166,9 +179,35 @@ public static class CameraPluginSettings
             }
         }
 
+        CameraDataList = new List<CameraData>();
         ParseSettingsFile(@settingLoc);
+        SongSpecific = false;
     }
 
+    /// <summary>
+    /// Loads a Specfic Settings File
+    /// </summary>
+    /// <param name="settingsFile">Designed for song-specific settings</param>
+    public static void LoadSettings(string settingsFile)
+    {
+        string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        string settingLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
+
+        settingLoc = Path.Combine(settingLoc, settingsFile);
+
+        // Check to see if the file exists.
+        if (File.Exists(@settingLoc))
+        {
+            CameraDataList = new List<CameraData>();
+            ParseSettingsFile(@settingLoc);
+            SongSpecific = true;
+        }
+    }
+
+    /// <summary>
+    /// Parses the settings file and breaks out into appropriate...settings
+    /// </summary>
+    /// <param name="fileName">File to parse, full path needed</param>
     public static void ParseSettingsFile(string fileName)
     {
         // Open the file to read from.
@@ -180,6 +219,7 @@ public static class CameraPluginSettings
         parser.Tokenize(readText);
 
         GlobalBias = ParseFloat(root.GetChildSafe("GlobalBias"));
+        Debug = ParseBool(root.GetChildSafe("Debug"));
 //        BlendSpeed = ParseFloat(root.GetChildSafe("BlendSpeed"));
 
         var camera = root.GetChild("Camera");
@@ -196,11 +236,24 @@ public static class CameraPluginSettings
             cameraData.Speed = ParseFloat(camera.GetChildSafe("Speed"));
             cameraData.MinTime = ParseFloat(camera.GetChildSafe("MinTime"));
             cameraData.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
+            cameraData.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
+            cameraData.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
 
             CameraDataList.Add(cameraData);
 
             camera = root.GetNextChild(camera);
         }
+    }
+
+    public static bool ParseBool(ReflectionToken token)
+    {
+        bool outBool = false;
+        if (bool.TryParse(token.mValue, out outBool))
+        {
+            return outBool;
+        }
+
+        return false;
     }
 
     public static float ParseFloat(ReflectionToken token)
