@@ -91,6 +91,10 @@ ActualTime allows you to specify how long to stay on a specific camera before it
 (Note, the first timer does not start until score changes - this is to allow different PCs to load up the song properly to sync multiple players.)\
 You can find the songhash in the output.txt file that's generated while in game and a song is loaded.
 
+### Song Specific Demo
+[![Song Specific Demo](https://img.youtube.com/vi/BTwlqemL8Ak/0.jpg)](https://www.youtube.com/watch?v=BTwlqemL8Ak)
+
+### Configuring Song Specific files
 Example in output.txt as songs load:
 
 ```
