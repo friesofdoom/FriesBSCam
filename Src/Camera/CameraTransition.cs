@@ -18,8 +18,8 @@ public class CameraTransition
     public Quaternion originRotation;
     public Vector3 targetPosition;
     public Quaternion targetRotation;
-    public float transitionDuration;
-    public CameraTransitionCurve transitionCurveType;
+    public float transitionDuration = 0f;
+    public CameraTransitionCurve transitionCurveType = CameraTransitionCurve.LINEAR;
 
     public PositionAndRotation getInterTransitionPositionAndRotation(float timeSinceSceneStart)
     {
