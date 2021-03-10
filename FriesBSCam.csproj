@@ -58,6 +58,7 @@
     <Compile Include="Src\AttributeParser.cs" />
     <Compile Include="Src\BeatSaberStatus.cs" />
     <Compile Include="Src\CameraData.cs" />
+    <Compile Include="Src\Camera\CameraTransition.cs" />
     <Compile Include="Src\MyCameraPlugin.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
