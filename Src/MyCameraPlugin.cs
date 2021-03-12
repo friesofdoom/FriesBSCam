@@ -49,6 +49,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
     float _elapsedTime = 0.0f;
+    float _timeSinceSceneStarted = 0.0f;
     float nextChangeTimer = 0.0f;
     float transitionTime = 0.0f;
     bool useHttpStatus = false;
@@ -83,6 +84,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public List<int> previousCameraIndices = new List<int>();
 
     public static StreamWriter logStream;
+
+    private int _frameLogAttemptCounter = 0;
 
 
     // Constructor is called when plugin loads
@@ -252,13 +255,17 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 // This allows us to have 'synced' song-specific camera files as different systems will load songs at different speeds
                 // based on storage and cpu performance. Just...don't miss the first note I guess?
                 if (beatSaberStatus.score > 0 && !beatSaberStatus.paused)
+                {
                     _elapsedTime += Time.deltaTime;
+                    _timeSinceSceneStarted += Time.deltaTime;
+                }
             }
         }
         else
         {
             // No HTTPStatus available so always increment the timer
             _elapsedTime += Time.deltaTime;
+            _timeSinceSceneStarted += Time.deltaTime;
         }
 
         UpdateCameraPose();
@@ -315,6 +322,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         Quaternion targetCameraRotationAdjustedForBias = Quaternion.EulerAngles(0.0f, biasAngle, 0.0f) * currentCameraTransition.targetRotation;
         Vector3 targetCameraPosition = currentCameraTransition.targetPosition;
 
+        
         if (currentCameraType == CameraType.Orbital)
         {
             var targetLerpBlendTime = 10.0f;
@@ -322,15 +330,13 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             var targetLerp = 0.2f;
             var direction = (targetLerp - cameraLerpValue) > 0.0f ? targetLerpBlendTime : -targetLerpBlendTime;
             cameraLerpValue += direction * Time.deltaTime;
+
+            currentOrbitalHeight = currentOrbitalHeight * (1.0f - cameraLerpValue) + orbitalHeightTarget * cameraLerpValue;
+            currentOrbitalDistance = currentOrbitalDistance * (1.0f - cameraLerpValue) + orbitalDistance * cameraLerpValue;
         }
 
-        CurrentCameraRotation = Quaternion.Slerp(CurrentCameraRotation, currentCameraTransition.targetRotation, cameraLerpValue);
-        CurrentCameraPosition = CurrentCameraPosition * (1.0f - cameraLerpValue) + currentCameraTransition.targetPosition * cameraLerpValue;
-
-        currentOrbitalHeight = currentOrbitalHeight * (1.0f - cameraLerpValue) + orbitalHeightTarget * cameraLerpValue;
-        currentOrbitalDistance = currentOrbitalDistance * (1.0f - cameraLerpValue) + orbitalDistance * cameraLerpValue;
-
-        _helper.UpdateCameraPose(CurrentCameraPosition, CurrentCameraRotation);
+        PositionAndRotation frameCameraPose = currentCameraTransition.getInterTransitionPositionAndRotation(_timeSinceSceneStarted);
+        updateCameraPose(frameCameraPose.position, frameCameraPose.rotation);
     }
 
     // OnLateUpdate is called after OnUpdate also everyframe and has a higher chance that transform updates are more recent.
@@ -352,6 +358,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
    private void transitionToNextCamera(bool transitionToMenu)
     {
+        _timeSinceSceneStarted = 0;
+
         cameraLerpValue = 0.02f;
         Log("New Camera Selection started");
 
@@ -433,6 +441,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             }
 
             Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + nextChangeTimer.ToString() + "s");
+            Log(_timeSinceSceneStarted.ToString() + "s since last scene change.");
         }
 
         switch (currentCameraType)
@@ -478,6 +487,32 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     break;
                 }
         }
+
+        currentCameraTransition = new CameraTransition
+        {
+            originPosition = CurrentCameraPosition,
+            originRotation = CurrentCameraRotation,
+
+            //NOTE:  These two seem to be updated every tick in UpdateCameraPose.  I don't think that's a bad thing if this is still the case.
+            targetPosition = currentCameraTransition.targetPosition,
+            targetRotation = currentCameraTransition.targetRotation,
+            transitionDuration = currentCameraData.TransitionTime,
+            transitionCurveType = CameraTransitionCurve.CUBIC,
+        };
+
+        Log("New Camera Transition:" + currentCameraTransition.ToString());
+    }
+
+    private void updateCameraPose(Vector3 position, Quaternion rotation)
+    {
+        CurrentCameraPosition = position;
+        CurrentCameraRotation = rotation;
+        _helper.UpdateCameraPose(position, rotation);
+        _frameLogAttemptCounter += 1;
+        if(_frameLogAttemptCounter % 30 == 0)
+        {
+            Log("\tScene Time: " + Math.Round(_timeSinceSceneStarted, 2).ToString() );
+            Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString() + "\n");
+        }
     }
 }
-

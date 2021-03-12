@@ -93,6 +93,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='2.0', y='1.0', z='-3.0'} ");
                 ws.WriteLine("	LookAt={x='-2.0', y='0.0', z='5.0'} ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopRight'");
@@ -102,6 +103,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Top'");
@@ -111,6 +113,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopLeft'");
@@ -120,6 +123,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomRight'");
@@ -129,6 +133,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'}  ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomLeft'");
@@ -138,6 +143,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital1'");
@@ -150,6 +156,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital2'");
@@ -162,6 +169,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital3'");
@@ -174,6 +182,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='2.0'");
                 ws.WriteLine("}");
             }
         }
