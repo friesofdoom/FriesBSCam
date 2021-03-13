@@ -4,6 +4,7 @@ public enum CameraTransitionCurve
 {
     LINEAR,
     CUBIC,
+    SLERP,
 }
 
 public struct PositionAndRotation
@@ -60,7 +61,9 @@ public class CameraTransition
                 return x;
             case CameraTransitionCurve.CUBIC:
                 return x < 0.5 ? 4 * x * x * x : 1 - System.Math.Pow(-2 * x + 2, 3) / 2;
-
+            case CameraTransitionCurve.SLERP:
+                //Forgive me, for I have sinned.  But unity doesn't offer a slerp for scalars.
+                return Vector3.Slerp(new Vector3(0, 0, 0), new Vector3(1, 0, 0), x).x;
             default:
                 return x;
         }

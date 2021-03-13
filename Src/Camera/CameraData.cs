@@ -23,7 +23,8 @@ public class CameraData
     public float MinTime;
     public float MaxTime;
     public float ActualTime;
-    public float TransitionTime;
+    public float TransitionTime = 2.0f;
+    public CameraTransitionCurve TransitionCurve = CameraTransitionCurve.SLERP;
 
     public Vector3 SmoothedPositionBinding = Vector3.zero;
     public Vector3 SmoothedLookAtBinding = Vector3.zero;
@@ -274,6 +275,7 @@ public static class CameraPluginSettings
         outCamera.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
         outCamera.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
         outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
+        outCamera.TransitionCurve = GetTransitionCurveFromToken(camera.GetChildSafe("TransitionCurve"));
 
         return outCamera;
     }
@@ -313,6 +315,20 @@ public static class CameraPluginSettings
         }
 
         return CameraType.LookAt;
+    }
+
+    public static CameraTransitionCurve GetTransitionCurveFromToken(ReflectionToken token)
+    {
+        switch(token.mValue){
+            case "Cubic":
+                return CameraTransitionCurve.CUBIC;
+            case "Linear":
+                return CameraTransitionCurve.LINEAR;
+            case "Slerp":
+                return CameraTransitionCurve.SLERP;
+            default:
+            return CameraTransitionCurve.SLERP;
+        }
     }
 
     public static Vector3 GetVector3Token(ReflectionToken token)

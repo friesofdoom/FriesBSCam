@@ -497,7 +497,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             targetPosition = currentCameraTransition.targetPosition,
             targetRotation = currentCameraTransition.targetRotation,
             transitionDuration = currentCameraData.TransitionTime,
-            transitionCurveType = CameraTransitionCurve.CUBIC,
+            transitionCurveType = currentCameraData.TransitionCurve,
         };
 
         Log("New Camera Transition:" + currentCameraTransition.ToString());
