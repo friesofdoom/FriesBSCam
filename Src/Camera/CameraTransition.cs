@@ -2,9 +2,9 @@
 
 public enum CameraTransitionCurve
 {
-    LINEAR,
-    CUBIC,
-    SLERP,
+    Linear,
+    EaseInOutCubic,
+    EaseOutCubic,
 }
 
 public struct PositionAndRotation
@@ -20,25 +20,32 @@ public class CameraTransition
     public Vector3 targetPosition;
     public Quaternion targetRotation;
     public float transitionDuration = 0f;
-    public CameraTransitionCurve transitionCurveType = CameraTransitionCurve.LINEAR;
+    public CameraTransitionCurve transitionCurveType = CameraTransitionCurve.Linear;
 
     public PositionAndRotation getInterTransitionPositionAndRotation(float timeSinceSceneStart)
     {
+        if(transitionDuration <= 0f)
+        {
+            return new PositionAndRotation {
+                position = targetPosition,
+                rotation = targetRotation,
+            };
+        }
 
-        float t = (float)getTransitionCurveValue(timeSinceSceneStart / transitionDuration, transitionCurveType);
-        t = Mathf.Clamp(t, 0, 1);
-
+        // Handle custom curves
+        float linearT = timeSinceSceneStart / transitionDuration;
+        float filteredT = (float)getTransitionCurveValue(linearT, transitionCurveType);
         return new PositionAndRotation{
             position = Vector3.Lerp(
                 originPosition,
                 targetPosition,
-                t
+                filteredT
             ),
 
             rotation = Quaternion.Lerp(
                 originRotation,
                 targetRotation,
-                t
+                filteredT
             ),
         };
     }
@@ -51,19 +58,19 @@ public class CameraTransition
             "Origional Rotation: " + originRotation.ToString() + "\n" +
             "Target Position: " + targetPosition.ToString() + "\n" +
             "Target Rotation: " + targetRotation.ToString() + "\n" +
-            "transitionDuration: " + transitionDuration.ToString() + "\n";
+            "transitionDuration: " + transitionDuration.ToString() + "\n" +
+            "transitionCurve: " + System.Enum.GetName(typeof(CameraTransitionCurve), transitionCurveType) + "\n";
     }
 
     private double getTransitionCurveValue(float x, CameraTransitionCurve curveType)
     {
         switch (curveType){
-            case CameraTransitionCurve.LINEAR:
+            case CameraTransitionCurve.Linear:
                 return x;
-            case CameraTransitionCurve.CUBIC:
+            case CameraTransitionCurve.EaseOutCubic:
+                return 1 - System.Math.Pow(1 - x, 3);
+            case CameraTransitionCurve.EaseInOutCubic:
                 return x < 0.5 ? 4 * x * x * x : 1 - System.Math.Pow(-2 * x + 2, 3) / 2;
-            case CameraTransitionCurve.SLERP:
-                //Forgive me, for I have sinned.  But unity doesn't offer a slerp for scalars.
-                return Vector3.Slerp(new Vector3(0, 0, 0), new Vector3(1, 0, 0), x).x;
             default:
                 return x;
         }

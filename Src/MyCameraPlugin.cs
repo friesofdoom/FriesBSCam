@@ -44,7 +44,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Author name.
     public string author => "fries";
     // Plugin version.
-    public string version => "1.2.0";
+    public string version => "1.3.0";
 
     // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
@@ -95,6 +95,9 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // The pluginCameraHelper is provided to you to help you with Player/Camera related operations.
     public void OnActivate(PluginCameraHelper helper)
     {
+
+        Application.logMessageReceived += LogError;
+
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string outputLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
 
@@ -118,6 +121,15 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         _helper.UpdateFov(60.0f);
         UpdateCameraChange();
 
+    }
+
+    public void LogError(string condition, string stackTrace, LogType type)
+    {
+        if(type == LogType.Error)
+        {
+            Log(condition);
+            Log(stackTrace);
+        }
     }
 
     public static void Log(string s)
