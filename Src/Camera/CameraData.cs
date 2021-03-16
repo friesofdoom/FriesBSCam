@@ -24,6 +24,7 @@ public class CameraData
     public float MaxTime;
     public float ActualTime;
     public float TransitionTime;
+    public CameraTransitionCurve TransitionCurve;
 
     public Vector3 SmoothedPositionBinding = Vector3.zero;
     public Vector3 SmoothedLookAtBinding = Vector3.zero;
@@ -93,6 +94,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='2.0', y='1.0', z='-3.0'} ");
                 ws.WriteLine("	LookAt={x='-2.0', y='0.0', z='5.0'} ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopRight'");
@@ -102,6 +104,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Top'");
@@ -111,6 +114,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopLeft'");
@@ -120,6 +124,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomRight'");
@@ -129,6 +134,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'}  ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomLeft'");
@@ -138,6 +144,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital1'");
@@ -150,6 +157,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital2'");
@@ -162,6 +170,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital3'");
@@ -174,6 +183,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("  TransitionTime='1.0'");
                 ws.WriteLine("}");
             }
         }
@@ -265,6 +275,7 @@ public static class CameraPluginSettings
         outCamera.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
         outCamera.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
         outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
+        outCamera.TransitionCurve = GetTransitionCurveFromToken(camera.GetChildSafe("TransitionCurve"));
 
         return outCamera;
     }
@@ -304,6 +315,20 @@ public static class CameraPluginSettings
         }
 
         return CameraType.LookAt;
+    }
+
+    public static CameraTransitionCurve GetTransitionCurveFromToken(ReflectionToken token)
+    {
+        switch(token.mValue){
+            case "EaseOutCubic":
+                return CameraTransitionCurve.EaseOutCubic;
+            case "EaseInOutCubic":
+                return CameraTransitionCurve.EaseInOutCubic;
+            case "Linear":
+                return CameraTransitionCurve.Linear;
+            default:
+                return CameraTransitionCurve.EaseOutCubic;
+        }
     }
 
     public static Vector3 GetVector3Token(ReflectionToken token)

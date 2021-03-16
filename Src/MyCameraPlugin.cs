@@ -44,11 +44,12 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // Author name.
     public string author => "fries";
     // Plugin version.
-    public string version => "1.2.0";
+    public string version => "1.3.0";
 
     // Locally store the camera helper provided by LIV.
     PluginCameraHelper _helper;
     float _elapsedTime = 0.0f;
+    float _timeSinceSceneStarted = 0.0f;
     float nextChangeTimer = 0.0f;
     float transitionTime = 0.0f;
     bool useHttpStatus = false;
@@ -62,9 +63,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public Vector3 CurrentCameraPosition = Vector3.zero;
     public Quaternion CurrentCameraRotation = Quaternion.identity;
 
-    public Vector3 TargetCameraPosition = Vector3.zero;
-    public Quaternion TargetCameraRotation = Quaternion.identity;
-
     public float currentOrbitalAngle = 0.0f;
     public float orbitalDirection = 1.0f;
     public float currentOrbitalHeight = 1.0f;
@@ -73,11 +71,21 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public float orbitalDistance = 1.0f;
     public int currentCameraIndex = 0;
 
+    public CameraTransition currentCameraTransition = new CameraTransition
+    {
+        originPosition = Vector3.zero,
+        originRotation = Quaternion.identity,
+        targetPosition = Vector3.zero,
+        targetRotation = Quaternion.identity,
+    };
+
     public float cameraLerpValue = 0.02f;
 
     public List<int> previousCameraIndices = new List<int>();
 
     public static StreamWriter logStream;
+
+    private int _frameLogAttemptCounter = 0;
 
 
     // Constructor is called when plugin loads
@@ -87,6 +95,9 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // The pluginCameraHelper is provided to you to help you with Player/Camera related operations.
     public void OnActivate(PluginCameraHelper helper)
     {
+
+        Application.logMessageReceived += LogError;
+
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string outputLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
 
@@ -110,6 +121,15 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         _helper.UpdateFov(60.0f);
         UpdateCameraChange();
 
+    }
+
+    public void LogError(string condition, string stackTrace, LogType type)
+    {
+        if(type == LogType.Error)
+        {
+            Log(condition);
+            Log(stackTrace);
+        }
     }
 
     public static void Log(string s)
@@ -206,132 +226,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         }
         else if (_elapsedTime >= nextChangeTimer || transitionToMenu)
         {
-            cameraLerpValue = 0.02f;
-            Log("New Camera Selection started");
-
-            var newCameraIndex = currentCameraIndex;
-
-            if (transitionToMenu)
-            {
-                // Transition to the Menu Camera and mark that we've done so. Update currentCameraIndex to -1 so we don't skip over Index 0 when we move to another camera
-                Log("Preparing to change to Menu Camera");
-                transitionToMenu = false;
-                currentCameraIndex = -1;
-                currentCameraData = CameraPluginSettings.MenuCamera;
-                currentCameraType = currentCameraData.Type;                
-            }
-            else
-            {
-                Log("Preparing to change to new Game Camera, currentCameraIndex = " + currentCameraIndex.ToString());
-                if (CameraPluginSettings.SongSpecific)
-                {
-                    Log("Song specific settings file active, increment to next camera");
-                    // Increment camera by 1 but make sure we don't skip over index 0 now
-                    if (newCameraIndex < CameraPluginSettings.CameraDataList.Count)
-                        newCameraIndex++;
-                }
-                else
-                {
-                    Log("Default settings file active, preparing to pick next camera");
-                    // If we don't have enough cameras to truly randomize...uh...I guess don't
-                    if (CameraPluginSettings.CameraDataList.Count > 2)
-                    {
-                        // Don't pick the same camera again for a few times
-                        while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
-                        {
-                            newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
-                        }
-                    }
-                    else if (CameraPluginSettings.CameraDataList.Count == 2)
-                    {
-                        Log("Only 2 cameras available, swapping between them");
-                        // If you've got two cameras switch between them, otherwise just stick with the current one
-                        switch (currentCameraIndex)
-                        {
-                            case 0:
-                                newCameraIndex = 1;
-                                break;
-                            case 1:
-                                newCameraIndex = 0;
-                                break;
-                            default:
-                                newCameraIndex = 0;
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        newCameraIndex = 0;
-                    }
-                }
-
-                if (previousCameraIndices.Count > 1)
-                    previousCameraIndices.RemoveAt(0);
-
-                previousCameraIndices.Add(newCameraIndex);
-
-                currentCameraIndex = newCameraIndex;
-                currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
-                currentCameraType = currentCameraData.Type;
-
-                if (CameraPluginSettings.SongSpecific)
-                {
-                    nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
-                    transitionTime = currentCameraData.TransitionTime;
-                }
-                else
-                {
-                    var minTime = currentCameraData.MinTime;
-                    var maxTime = currentCameraData.MaxTime;
-                    nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
-                }
-
-                Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + nextChangeTimer.ToString() + "s");
-            }
-
-            switch (currentCameraType)
-            {
-                case CameraType.Orbital:
-                    {
-                        Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
-                        var direction = CurrentCameraPosition - targetPosition;
-                        direction.y = 0.0f;
-                        direction.Normalize();
-
-                        if (CurrentCameraPosition.x < targetPosition.x)
-                        {
-                            orbitalDirection = -1;
-                        }
-                        else if (CurrentCameraPosition.x > targetPosition.x)
-                        {
-                            orbitalDirection = 1;
-                        }
-                        else
-                        {
-                            orbitalDirection = ((rand.Next() & 1) == 1) ? 1.0f : -1.0f;
-                        }
-
-                        var angle = (float)Math.Atan2(direction.z, direction.x);
-                        currentOrbitalAngle = angle;
-                        currentOrbitalHeight = CurrentCameraPosition.y;
-                        orbitalHeightTarget = targetPosition.y;
-                        currentOrbitalDistance = (CurrentCameraPosition - targetPosition).magnitude;
-                        orbitalDistance = currentCameraData.Distance;
-
-                        Log("orbitalDirection: " + orbitalDirection);
-                        Log("currentOrbitalHeight: " + currentOrbitalHeight);
-                        Log("orbitalHeightTarget: " + orbitalHeightTarget);
-                        Log("currentOrbitalDistance: " + currentOrbitalDistance);
-                        Log("orbitalDistance: " + orbitalDistance);
-                        Log("currentOrbitalAngle: " + currentOrbitalAngle);
-
-                        break;
-                    }
-                case CameraType.LookAt:
-                    {
-                        break;
-                    }
-            }
+            transitionToNextCamera(transitionToMenu);
         }
     }
 
@@ -372,18 +267,25 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 // This allows us to have 'synced' song-specific camera files as different systems will load songs at different speeds
                 // based on storage and cpu performance. Just...don't miss the first note I guess?
                 if (beatSaberStatus.score > 0 && !beatSaberStatus.paused)
+                {
                     _elapsedTime += Time.deltaTime;
+                    _timeSinceSceneStarted += Time.deltaTime;
+                }
             }
         }
         else
         {
             // No HTTPStatus available so always increment the timer
             _elapsedTime += Time.deltaTime;
+            _timeSinceSceneStarted += Time.deltaTime;
         }
 
         UpdateCameraPose();
     }
 
+    /**
+     * Called on every tick to update the camera transform and configuration
+     */
     public void UpdateCameraPose()
     {
         switch (currentCameraType)
@@ -408,30 +310,31 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                         0f,
                         Mathf.Sin(currentOrbitalAngle));
 
-                    TargetCameraPosition = targetPosition + rotationVector * currentOrbitalDistance;
-                    TargetCameraPosition.y = currentOrbitalHeight;
-                    TargetCameraRotation = Quaternion.LookRotation((targetLookAtPosition - TargetCameraPosition).normalized);
+                    currentCameraTransition.targetPosition = targetPosition + rotationVector * currentOrbitalDistance;
+                    currentCameraTransition.targetPosition.y = currentOrbitalHeight;
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized);
                     break;
                 }
             case CameraType.LookAt:
                 {
                     UpdateCameraChange();
                     Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
-                    TargetCameraPosition = targetPosition;
-                    TargetCameraRotation = Quaternion.LookRotation(currentCameraData.LookAt);
+                    currentCameraTransition.targetPosition = targetPosition;
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation(currentCameraData.LookAt);
                     break;
                 }
         }
-
-        var biasAngle = CameraPluginSettings.GlobalBias * (float)Math.PI / 180.0f;
-        TargetCameraRotation = Quaternion.EulerAngles(0.0f, biasAngle, 0.0f) * TargetCameraRotation;
 
         BlendCameraPose();
     }
 
     void BlendCameraPose()
     {
-        float distance = (CurrentCameraPosition - TargetCameraPosition).magnitude;
+        var biasAngle = CameraPluginSettings.GlobalBias * (float)Math.PI / 180.0f;
+        Quaternion targetCameraRotationAdjustedForBias = Quaternion.EulerAngles(0.0f, biasAngle, 0.0f) * currentCameraTransition.targetRotation;
+        Vector3 targetCameraPosition = currentCameraTransition.targetPosition;
+
+        
         if (currentCameraType == CameraType.Orbital)
         {
             var targetLerpBlendTime = 10.0f;
@@ -439,15 +342,13 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             var targetLerp = 0.2f;
             var direction = (targetLerp - cameraLerpValue) > 0.0f ? targetLerpBlendTime : -targetLerpBlendTime;
             cameraLerpValue += direction * Time.deltaTime;
+
+            currentOrbitalHeight = currentOrbitalHeight * (1.0f - cameraLerpValue) + orbitalHeightTarget * cameraLerpValue;
+            currentOrbitalDistance = currentOrbitalDistance * (1.0f - cameraLerpValue) + orbitalDistance * cameraLerpValue;
         }
 
-        CurrentCameraRotation = Quaternion.Slerp(CurrentCameraRotation, TargetCameraRotation, cameraLerpValue);
-        CurrentCameraPosition = CurrentCameraPosition * (1.0f - cameraLerpValue) + TargetCameraPosition * cameraLerpValue;
-
-        currentOrbitalHeight = currentOrbitalHeight * (1.0f - cameraLerpValue) + orbitalHeightTarget * cameraLerpValue;
-        currentOrbitalDistance = currentOrbitalDistance * (1.0f - cameraLerpValue) + orbitalDistance * cameraLerpValue;
-
-        _helper.UpdateCameraPose(CurrentCameraPosition, CurrentCameraRotation);
+        PositionAndRotation frameCameraPose = currentCameraTransition.getInterTransitionPositionAndRotation(_timeSinceSceneStarted);
+        updateCameraPose(frameCameraPose.position, frameCameraPose.rotation);
     }
 
     // OnLateUpdate is called after OnUpdate also everyframe and has a higher chance that transform updates are more recent.
@@ -466,5 +367,164 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public void OnDestroy() {
 
     }
-}
 
+   private void transitionToNextCamera(bool transitionToMenu)
+    {
+        _timeSinceSceneStarted = 0;
+
+        cameraLerpValue = 0.02f;
+        Log("New Camera Selection started");
+
+        var newCameraIndex = currentCameraIndex;
+
+        if (transitionToMenu)
+        {
+            // Transition to the Menu Camera and mark that we've done so. Update currentCameraIndex to -1 so we don't skip over Index 0 when we move to another camera
+            Log("Preparing to change to Menu Camera");
+            transitionToMenu = false;
+            currentCameraIndex = -1;
+            currentCameraData = CameraPluginSettings.MenuCamera;
+            currentCameraType = currentCameraData.Type;
+        }
+        else
+        {
+            Log("Preparing to change to new Game Camera, currentCameraIndex = " + currentCameraIndex.ToString());
+            if (CameraPluginSettings.SongSpecific)
+            {
+                Log("Song specific settings file active, increment to next camera");
+                // Increment camera by 1 but make sure we don't skip over index 0 now
+                if (newCameraIndex < CameraPluginSettings.CameraDataList.Count)
+                    newCameraIndex++;
+            }
+            else
+            {
+                Log("Default settings file active, preparing to pick next camera");
+                // If we don't have enough cameras to truly randomize...uh...I guess don't
+                if (CameraPluginSettings.CameraDataList.Count > 2)
+                {
+                    // Don't pick the same camera again for a few times
+                    while (previousCameraIndices.Contains(newCameraIndex) || (currentCameraType == CameraType.Orbital && CameraPluginSettings.CameraDataList[newCameraIndex].Type == CameraType.Orbital))
+                    {
+                        newCameraIndex = rand.Next() % CameraPluginSettings.CameraDataList.Count;
+                    }
+                }
+                else if (CameraPluginSettings.CameraDataList.Count == 2)
+                {
+                    Log("Only 2 cameras available, swapping between them");
+                    // If you've got two cameras switch between them, otherwise just stick with the current one
+                    switch (currentCameraIndex)
+                    {
+                        case 0:
+                            newCameraIndex = 1;
+                            break;
+                        case 1:
+                            newCameraIndex = 0;
+                            break;
+                        default:
+                            newCameraIndex = 0;
+                            break;
+                    }
+                }
+                else
+                {
+                    newCameraIndex = 0;
+                }
+            }
+
+            if (previousCameraIndices.Count > 1)
+                previousCameraIndices.RemoveAt(0);
+
+            previousCameraIndices.Add(newCameraIndex);
+
+            currentCameraIndex = newCameraIndex;
+            currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
+            currentCameraType = currentCameraData.Type;
+
+            if (CameraPluginSettings.SongSpecific)
+            {
+                nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
+                transitionTime = currentCameraData.TransitionTime;
+            }
+            else
+            {
+                var minTime = currentCameraData.MinTime;
+                var maxTime = currentCameraData.MaxTime;
+                nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
+            }
+
+            Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + nextChangeTimer.ToString() + "s");
+            Log(_timeSinceSceneStarted.ToString() + "s since last scene change.");
+        }
+
+        switch (currentCameraType)
+        {
+            case CameraType.Orbital:
+                {
+                    Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
+                    var direction = CurrentCameraPosition - targetPosition;
+                    direction.y = 0.0f;
+                    direction.Normalize();
+
+                    if (CurrentCameraPosition.x < targetPosition.x)
+                    {
+                        orbitalDirection = -1;
+                    }
+                    else if (CurrentCameraPosition.x > targetPosition.x)
+                    {
+                        orbitalDirection = 1;
+                    }
+                    else
+                    {
+                        orbitalDirection = ((rand.Next() & 1) == 1) ? 1.0f : -1.0f;
+                    }
+
+                    var angle = (float)Math.Atan2(direction.z, direction.x);
+                    currentOrbitalAngle = angle;
+                    currentOrbitalHeight = CurrentCameraPosition.y;
+                    orbitalHeightTarget = targetPosition.y;
+                    currentOrbitalDistance = (CurrentCameraPosition - targetPosition).magnitude;
+                    orbitalDistance = currentCameraData.Distance;
+
+                    Log("orbitalDirection: " + orbitalDirection);
+                    Log("currentOrbitalHeight: " + currentOrbitalHeight);
+                    Log("orbitalHeightTarget: " + orbitalHeightTarget);
+                    Log("currentOrbitalDistance: " + currentOrbitalDistance);
+                    Log("orbitalDistance: " + orbitalDistance);
+                    Log("currentOrbitalAngle: " + currentOrbitalAngle);
+
+                    break;
+                }
+            case CameraType.LookAt:
+                {
+                    break;
+                }
+        }
+
+        currentCameraTransition = new CameraTransition
+        {
+            originPosition = CurrentCameraPosition,
+            originRotation = CurrentCameraRotation,
+
+            //NOTE:  These two seem to be updated every tick in UpdateCameraPose.  I don't think that's a bad thing if this is still the case.
+            targetPosition = currentCameraTransition.targetPosition,
+            targetRotation = currentCameraTransition.targetRotation,
+            transitionDuration = currentCameraData.TransitionTime,
+            transitionCurveType = currentCameraData.TransitionCurve,
+        };
+
+        Log("New Camera Transition:" + currentCameraTransition.ToString());
+    }
+
+    private void updateCameraPose(Vector3 position, Quaternion rotation)
+    {
+        CurrentCameraPosition = position;
+        CurrentCameraRotation = rotation;
+        _helper.UpdateCameraPose(position, rotation);
+        _frameLogAttemptCounter += 1;
+        if(_frameLogAttemptCounter % 30 == 0)
+        {
+            Log("\tScene Time: " + Math.Round(_timeSinceSceneStarted, 2).ToString() );
+            Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString() + "\n");
+        }
+    }
+}
