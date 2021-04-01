@@ -296,7 +296,11 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     Vector3 targetLookAtPosition = currentCameraData.EvaluateLookAtBindingBinding(_helper);
                     orbitalHeightTarget = targetPosition.y;
 
-                    UpdateCameraChange();
+                    // TODO: Change this test to be based on the currentOrbitalAngle
+                    if (!currentCameraData.ReleaseBehindPlayer || Mathf.Sin(currentOrbitalAngle) < -0.5f)
+                    {
+                        UpdateCameraChange();
+                    }
 
                     var blendSpeed = (cameraLerpValue - 0.02f) / (0.2f - 0.02f);
                     currentOrbitalAngle += Time.deltaTime * orbitalDirection * currentCameraData.Speed * blendSpeed;

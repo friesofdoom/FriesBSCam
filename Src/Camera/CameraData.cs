@@ -25,6 +25,7 @@ public class CameraData
     public float ActualTime;
     public float TransitionTime;
     public CameraTransitionCurve TransitionCurve;
+    public bool ReleaseBehindPlayer = false;
 
     public Vector3 SmoothedPositionBinding = Vector3.zero;
     public Vector3 SmoothedLookAtBinding = Vector3.zero;
@@ -158,6 +159,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
                 ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("  ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital2'");
@@ -171,6 +173,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
                 ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("  ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital3'");
@@ -184,6 +187,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
                 ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("  ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
             }
         }
@@ -276,6 +280,7 @@ public static class CameraPluginSettings
         outCamera.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
         outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
         outCamera.TransitionCurve = GetTransitionCurveFromToken(camera.GetChildSafe("TransitionCurve"));
+        outCamera.ReleaseBehindPlayer = ParseBool(camera.GetChildSafe("ReleaseBehindPlayer"));
 
         return outCamera;
     }

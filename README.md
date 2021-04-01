@@ -73,6 +73,9 @@ ActualTime='0.0' \
 
 TransitionTime='0.0' \
 (Unused) Here for future support of camera-specific blend speed changes
+
+ReleaseBehindPlayer='true/false' \
+(Optional) Used for orbital cameras. If true the camera will remain active until behind the player. Default is false.
 	
 
 # (Optional) HTTPStatus Plugin Support
