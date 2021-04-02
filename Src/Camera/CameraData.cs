@@ -61,6 +61,13 @@ public class CameraData
             default: return Vector3.zero;
         }
     }
+
+    public override string ToString()
+    {
+        return "Camera: " + this.Name + ", Type: " + this.Type.ToString() + ", PositionBinding: " + this.PositionBinding + ", PositionOffset: " 
+            + this.PositionOffset.ToString() + ", LookAt: " + this.LookAt.ToString() + ", MinTime: " + this.MinTime.ToString() + ", MaxTime: " 
+            + this.MaxTime.ToString() + ", TransitionTime: " + this.TransitionTime.ToString() + ", TransitionCurve: " + this.TransitionCurve.ToString();
+    }
 }
 
 public static class CameraPluginSettings
@@ -95,7 +102,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='2.0', y='1.0', z='-3.0'} ");
                 ws.WriteLine("	LookAt={x='-2.0', y='0.0', z='5.0'} ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopRight'");
@@ -105,7 +112,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Top'");
@@ -115,7 +122,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='TopLeft'");
@@ -125,7 +132,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomRight'");
@@ -135,7 +142,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'}  ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='BottomLeft'");
@@ -145,7 +152,7 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'} ");
                 ws.WriteLine("	MinTime='4.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
+                ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital1'");
@@ -158,8 +165,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
-                ws.WriteLine("  ReleaseBehindPlayer='true'");
+                ws.WriteLine("	TransitionTime='2.0'");
+                ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital2'");
@@ -172,8 +179,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
-                ws.WriteLine("  ReleaseBehindPlayer='true'");
+                ws.WriteLine("	TransitionTime='2.0'");
+                ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital3'");
@@ -186,8 +193,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
                 ws.WriteLine("	MaxTime='8.0' ");
-                ws.WriteLine("  TransitionTime='1.0'");
-                ws.WriteLine("  ReleaseBehindPlayer='true'");
+                ws.WriteLine("	TransitionTime='2.0'");
+                ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
             }
         }
@@ -201,20 +208,20 @@ public static class CameraPluginSettings
     /// <summary>
     /// Loads a Specfic Settings File
     /// </summary>
-    /// <param name="settingsFile">Designed for song-specific settings</param>
+    /// <param name="settingsFile">Designed for song-specific settings - only checks the latter portion of the filename</param>
     public static void LoadSettings(string settingsFile)
     {
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         string settingLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
 
-        settingLoc = Path.Combine(settingLoc, settingsFile);
+        string[] files = Directory.GetFiles(settingLoc, "*" + settingsFile, SearchOption.TopDirectoryOnly);
 
         // Check to see if the file exists.
-        if (File.Exists(@settingLoc))
+        if (files.Length > 0)
         {
             MenuCamera = new CameraData();
             CameraDataList = new List<CameraData>();
-            ParseSettingsFile(@settingLoc);
+            ParseSettingsFile(files[0]);
             SongSpecific = true;
         }
     }
@@ -252,6 +259,8 @@ public static class CameraPluginSettings
             MenuCamera.PositionBinding = "playerWaist";
             MenuCamera.PositionOffset = new Vector3(2.0f, 1.0f, -3.0f);
             MenuCamera.LookAt = new Vector3(-2.0f, 0.0f, 5.0f);
+            MenuCamera.TransitionTime = 2.0f;
+            MenuCamera.TransitionCurve = CameraTransitionCurve.Linear;
         }
 
         var camera = root.GetChild("Camera");

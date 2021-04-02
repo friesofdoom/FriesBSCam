@@ -54,8 +54,8 @@ public class CameraTransition
     {
         return
             "--- Camera Transition--- " + "\n\n" + 
-            "Origional Position: " + originPosition.ToString() + "\n" +
-            "Origional Rotation: " + originRotation.ToString() + "\n" +
+            "Original Position: " + originPosition.ToString() + "\n" +
+            "Original Rotation: " + originRotation.ToString() + "\n" +
             "Target Position: " + targetPosition.ToString() + "\n" +
             "Target Rotation: " + targetRotation.ToString() + "\n" +
             "transitionDuration: " + transitionDuration.ToString() + "\n" +

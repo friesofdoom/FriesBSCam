@@ -51,7 +51,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     float _elapsedTime = 0.0f;
     float _timeSinceSceneStarted = 0.0f;
     float nextChangeTimer = 0.0f;
-    float transitionTime = 0.0f;
     bool useHttpStatus = false;
     bool inMenu = false;
     bool inGame = false;
@@ -207,7 +206,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
                     // We need to check to see if there is a song-specific settings file, and if so, load that instead
                     Log("Checking to see if there are song-specific Settings");
-                    CameraPluginSettings.LoadSettings("settings." + beatSaberStatus.songHash + ".txt");
+                    CameraPluginSettings.LoadSettings(beatSaberStatus.songHash + ".txt");
 
                     if (CameraPluginSettings.SongSpecific)
                     {
@@ -269,7 +268,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 if (beatSaberStatus.score > 0 && !beatSaberStatus.paused)
                 {
                     _elapsedTime += Time.deltaTime;
-                    _timeSinceSceneStarted += Time.deltaTime;
                 }
             }
         }
@@ -277,9 +275,11 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             // No HTTPStatus available so always increment the timer
             _elapsedTime += Time.deltaTime;
-            _timeSinceSceneStarted += Time.deltaTime;
         }
 
+        // Moving _timeSinceSceneStarted out here to always update, as opposed to only updating when either inGame or when HTTPStatus isn't used
+        // As otherwise it seems to break transitioning into the menu
+        _timeSinceSceneStarted += Time.deltaTime;
         UpdateCameraPose();
     }
 
@@ -385,6 +385,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             currentCameraIndex = -1;
             currentCameraData = CameraPluginSettings.MenuCamera;
             currentCameraType = currentCameraData.Type;
+            Log(currentCameraData.ToString());
         }
         else
         {
@@ -443,7 +444,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             if (CameraPluginSettings.SongSpecific)
             {
                 nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
-                transitionTime = currentCameraData.TransitionTime;
             }
             else
             {
