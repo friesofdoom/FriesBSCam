@@ -1,0 +1,405 @@
+GlobalBias='0.0'
+MenuCamera={
+	Name='MenuCam'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='-3.0'} 
+	LookAt={x='-2.0', y='0.0', z='5.0'} 	
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.5', y='1.3', z='-2.0'} 
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.53' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.6' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Top'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='2.0', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='15.13' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital2'
+	Type='Orbital'
+	Distance='4.0'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.0', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='18.69' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Left'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-3.5', y='0.5', z='1.0'} 
+	LookAt={x='2.0', y='0.0', z='0.0'} 
+	ActualTime='4.0' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalRearLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-2.0', y='1.0', z='-3.0'} 
+	LookAt={x='2.0', y='0.0', z='5.0'} 
+	ActualTime='8.41' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.75', y='0.0', z='-2.0'} 
+	LookAt={x='0.0', y='0.0', z='1.0'}  
+	ActualTime='8.6' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.75', y='0.0', z='-2.0'}  
+	LookAt={x='0.0', y='0.0', z='1.0'} 
+	ActualTime='5.19' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.55' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital1'
+	Type='Orbital'
+	Distance='3.0'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.5', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='18.48' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopDown'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='4.5', z='0.5'} 
+	LookAt={x='0.0', y='-4.0', z='0.0'} 
+	ActualTime='3.3' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='4.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-4.0'} 
+	ActualTime='8.24' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRightZoom'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='2.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-2.0'} 
+	ActualTime='2.15' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Front'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='1.0', z='2.0'}  
+	LookAt={x='0.0', y='-0.5', z='-1.0'} 
+	ActualTime='7.81' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Left'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-3.5', y='0.5', z='1.0'} 
+	LookAt={x='2.0', y='0.0', z='0.0'} 
+	ActualTime='7.54' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.6' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.5', y='1.3', z='-2.0'} 
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.51' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Right'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='3.5', y='0.5', z='1.0'} 
+	LookAt={x='-2.0', y='0.0', z='0.0'} 
+	ActualTime='11.34' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Top'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='2.0', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='3.75' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital3'
+	Type='Orbital'
+	Distance='5.0'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.0', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='19.5' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital3Close'
+	Type='Orbital'
+	Distance='2.5'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.0', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='18.9' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Left'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-3.5', y='0.5', z='1.0'} 
+	LookAt={x='2.0', y='0.0', z='0.0'} 
+	ActualTime='8.22' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.75', y='0.0', z='-2.0'}  
+	LookAt={x='0.0', y='0.0', z='1.0'} 
+	ActualTime='3.9' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='6.1' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.5', y='1.3', z='-2.0'} 
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='7.58' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.75', y='0.0', z='-2.0'} 
+	LookAt={x='0.0', y='0.0', z='1.0'}  
+	ActualTime='7.1' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Top'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='2.0', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='30.7' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital2'
+	Type='Orbital'
+	Distance='4.0'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.0', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='11.32' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Right'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='3.5', y='0.5', z='1.0'} 
+	LookAt={x='-2.0', y='0.0', z='0.0'} 
+	ActualTime='6.48' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='4.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-4.0'} 
+	ActualTime='7.55' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRightZoom'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='2.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-2.0'} 
+	ActualTime='7.57' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalRearRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='-3.0'} 
+	LookAt={x='-2.0', y='0.0', z='5.0'} 
+	ActualTime='7.57' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalRearRightZoom'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='-1.0'} 
+	LookAt={x='-2.0', y='0.0', z='3.0'} 
+	ActualTime='2.83' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.5', y='1.3', z='-2.0'} 
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='3.93' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='TopLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='1.8' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomLeft'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='-0.75', y='0.0', z='-2.0'}  
+	LookAt={x='0.0', y='0.0', z='1.0'} 
+	ActualTime='3.7' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='BottomRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.75', y='0.0', z='-2.0'} 
+	LookAt={x='0.0', y='0.0', z='1.0'}  
+	ActualTime='3.77' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Top'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='2.0', z='-2.0'}  
+	LookAt={x='0.0', y='-0.5', z='1.0'} 
+	ActualTime='17.96' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Orbital1'
+	Type='Orbital'
+	Distance='3.0'
+	Speed='1.0'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='0.5', z='0.0'}  
+	LookAtBinding='playerWaist'
+	LookAt={x='0.0', y='0.0', z='0.0'} 
+	ActualTime='14.13' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRight'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='4.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-4.0'} 
+	ActualTime='12.33' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='DiagonalFrontRightZoom'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='2.0', y='1.0', z='2.2'} 
+	LookAt={x='-2.0', y='-0.5', z='-2.0'} 
+	ActualTime='3.73' 
+	TransitionTime='2.0' 
+}
+Camera={
+	Name='Front'
+	Type='LookAt'
+	PositionBinding='playerWaist'
+	PositionOffset={x='0.0', y='1.0', z='2.0'}  
+	LookAt={x='0.0', y='-0.5', z='-1.0'} 
+	ActualTime='20.0' 
+	TransitionTime='2.0' 
+}
