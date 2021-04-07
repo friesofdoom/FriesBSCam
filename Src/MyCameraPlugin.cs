@@ -439,6 +439,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
             currentCameraIndex = newCameraIndex;
             currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
+            currentCameraData.ResetSmoothing(_helper);
             currentCameraType = currentCameraData.Type;
 
             if (CameraPluginSettings.SongSpecific)
@@ -465,11 +466,13 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     direction.y = 0.0f;
                     direction.Normalize();
 
-                    if (CurrentCameraPosition.x < targetPosition.x)
+                    if ((CurrentCameraPosition.x < targetPosition.x && currentCameraData.Direction == OrbitalDirection.Dynamic)
+                        || currentCameraData.Direction == OrbitalDirection.Right)
                     {
                         orbitalDirection = -1;
                     }
-                    else if (CurrentCameraPosition.x > targetPosition.x)
+                    else if ((CurrentCameraPosition.x > targetPosition.x && currentCameraData.Direction == OrbitalDirection.Dynamic)
+                        || currentCameraData.Direction == OrbitalDirection.Left)
                     {
                         orbitalDirection = 1;
                     }
