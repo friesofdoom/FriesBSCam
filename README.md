@@ -72,7 +72,7 @@ ActualTime='0.0' \
 (Optional) Used with song-specific settings files to give more control over timing of changing to other cameras (see below)
 
 TransitionTime='0.0' \
-(Unused) Here for future support of camera-specific blend speed changes
+(Optional) Allows you to set the amount of time it takes to blend to a camera (highly useful for song-specific but can be used for either). Default is 0.0s for cameras that don't specify, however the file creation uses 2.0s which is a generally pleasing blend
 
 ReleaseBehindPlayer='true/false' \
 (Optional) Used for orbital cameras. If true the camera will remain active until behind the player. Default is false.
