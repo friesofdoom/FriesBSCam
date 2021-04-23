@@ -10,6 +10,13 @@ public enum CameraType
     NumTypes,
 }
 
+public enum OrbitalDirection
+{
+    Right,
+    Left,
+    Dynamic
+}
+
 public class CameraData
 {
     public String Name;
@@ -26,6 +33,7 @@ public class CameraData
     public float TransitionTime;
     public CameraTransitionCurve TransitionCurve;
     public bool ReleaseBehindPlayer = false;
+    public OrbitalDirection Direction = OrbitalDirection.Dynamic;
 
     public Vector3 SmoothedPositionBinding = Vector3.zero;
     public Vector3 SmoothedLookAtBinding = Vector3.zero;
@@ -69,6 +77,15 @@ public class CameraData
             case "playerHead": return helper.playerHead.position;
             default: return Vector3.zero;
         }
+    }
+
+    public void ResetSmoothing(PluginCameraHelper helper)
+    {
+        var newLookat = EvaluateBinding(helper, LookAtBinding) + LookAt;
+        var newPos = EvaluateBinding(helper, PositionBinding) + PositionOffset;
+
+        SmoothedLookAtBinding = newLookat;
+        SmoothedPositionBinding = newPos;
     }
 
     public override string ToString()
@@ -119,8 +136,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='0.5', y='1.3', z='-2.0'} ");
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MinTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
@@ -129,8 +146,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='0.0', y='2.0', z='-2.0'}  ");
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MinTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
@@ -139,8 +156,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='-0.5', y='1.3', z='-2.0'}  ");
                 ws.WriteLine("	LookAt={x='0.0', y='-0.5', z='1.0'} ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MinTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
@@ -149,8 +166,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='0.75', y='0.0', z='-2.0'} ");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'}  ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MinTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
@@ -159,8 +176,8 @@ public static class CameraPluginSettings
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='-0.75', y='0.0', z='-2.0'}  ");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='1.0'} ");
-                ws.WriteLine("	MinTime='4.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MinTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
@@ -173,35 +190,35 @@ public static class CameraPluginSettings
                 ws.WriteLine("	LookAtBinding='playerWaist'");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital2'");
                 ws.WriteLine("	Type='Orbital'");
-                ws.WriteLine("	Distance='3.0'");
+                ws.WriteLine("	Distance='4.0'");
                 ws.WriteLine("	Speed='1.0'");
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='0.0', y='0.0', z='0.0'}  ");
                 ws.WriteLine("	LookAtBinding='playerWaist'");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
                 ws.WriteLine("Camera={");
                 ws.WriteLine("	Name='Orbital3'");
                 ws.WriteLine("	Type='Orbital'");
-                ws.WriteLine("	Distance='3.0'");
+                ws.WriteLine("	Distance='5.0'");
                 ws.WriteLine("	Speed='1.0'");
                 ws.WriteLine("	PositionBinding='playerWaist'");
                 ws.WriteLine("	PositionOffset={x='0.0', y='0.0', z='0.0'}  ");
                 ws.WriteLine("	LookAtBinding='playerWaist'");
                 ws.WriteLine("	LookAt={x='0.0', y='0.0', z='0.0'} ");
                 ws.WriteLine("	MinTime='8.0' ");
-                ws.WriteLine("	MaxTime='8.0' ");
+                ws.WriteLine("	MaxTime='12.0' ");
                 ws.WriteLine("	TransitionTime='2.0'");
                 ws.WriteLine("	ReleaseBehindPlayer='true'");
                 ws.WriteLine("}");
@@ -299,6 +316,7 @@ public static class CameraPluginSettings
         outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
         outCamera.TransitionCurve = GetTransitionCurveFromToken(camera.GetChildSafe("TransitionCurve"));
         outCamera.ReleaseBehindPlayer = ParseBool(camera.GetChildSafe("ReleaseBehindPlayer"));
+        outCamera.Direction = GetOrbitalDirectionFromToken(camera.GetChildSafe("Direction"));
 
         return outCamera;
     }
@@ -326,28 +344,40 @@ public static class CameraPluginSettings
         return 0.0f;
     }
 
+    public static OrbitalDirection GetOrbitalDirectionFromToken(ReflectionToken token)
+    {
+        switch (token.mValue.ToLower()){
+            case "right":
+                return OrbitalDirection.Right;
+            case "left":
+                return OrbitalDirection.Left;
+            case "dynamic":
+                return OrbitalDirection.Dynamic;
+            default:
+                return OrbitalDirection.Dynamic;
+        }
+    }
+
     public static CameraType GetCameraTypeFromToken(ReflectionToken token)
     {
-        if (token.mValue == "Orbital")
-        {
-            return CameraType.Orbital;
+        switch (token.mValue.ToLower()){
+            case "orbital":
+                return CameraType.Orbital;
+            case "lookat":
+                return CameraType.LookAt;
+            default:
+                return CameraType.LookAt;
         }
-        if (token.mValue == "LookAt")
-        {
-            return CameraType.LookAt;
-        }
-
-        return CameraType.LookAt;
     }
 
     public static CameraTransitionCurve GetTransitionCurveFromToken(ReflectionToken token)
     {
-        switch(token.mValue){
-            case "EaseOutCubic":
+        switch(token.mValue.ToLower()){
+            case "easeoutcubic":
                 return CameraTransitionCurve.EaseOutCubic;
-            case "EaseInOutCubic":
+            case "easeinoutcubic":
                 return CameraTransitionCurve.EaseInOutCubic;
-            case "Linear":
+            case "linear":
                 return CameraTransitionCurve.Linear;
             default:
                 return CameraTransitionCurve.EaseOutCubic;
