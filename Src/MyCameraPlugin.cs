@@ -288,6 +288,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
      */
     public void UpdateCameraPose()
     {
+        var biasQuat = Quaternion.Euler(0.0f, CameraPluginSettings.GlobalBias, 0.0f);
         switch (currentCameraType)
         {
             case CameraType.Orbital:
@@ -312,7 +313,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
                     currentCameraTransition.targetPosition = targetPosition + rotationVector * currentOrbitalDistance;
                     currentCameraTransition.targetPosition.y = currentOrbitalHeight;
-                    currentCameraTransition.targetRotation = Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized);
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized) * biasQuat; ;
                     break;
                 }
             case CameraType.LookAt:
@@ -320,7 +321,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     UpdateCameraChange();
                     Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
                     currentCameraTransition.targetPosition = targetPosition;
-                    currentCameraTransition.targetRotation = Quaternion.LookRotation(currentCameraData.LookAt);
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation(currentCameraData.LookAt) * biasQuat; ;
                     break;
                 }
         }
@@ -330,11 +331,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     void BlendCameraPose()
     {
-        var biasAngle = CameraPluginSettings.GlobalBias * (float)Math.PI / 180.0f;
-        Quaternion targetCameraRotationAdjustedForBias = Quaternion.EulerAngles(0.0f, biasAngle, 0.0f) * currentCameraTransition.targetRotation;
-        Vector3 targetCameraPosition = currentCameraTransition.targetPosition;
-
-        
         if (currentCameraType == CameraType.Orbital)
         {
             var targetLerpBlendTime = 10.0f;
@@ -439,6 +435,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
             currentCameraIndex = newCameraIndex;
             currentCameraData = CameraPluginSettings.CameraDataList[currentCameraIndex];
+            currentCameraData.ResetSmoothing(_helper);
             currentCameraType = currentCameraData.Type;
 
             if (CameraPluginSettings.SongSpecific)

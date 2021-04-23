@@ -48,6 +48,15 @@ public class CameraData
         return SmoothedLookAtBinding;
     }
 
+    public void ResetSmoothing(PluginCameraHelper helper)
+    {
+        var newLookat = EvaluateBinding(helper, LookAtBinding) + LookAt;
+        var newPos = EvaluateBinding(helper, PositionBinding) + PositionOffset;
+
+        SmoothedLookAtBinding = newLookat;
+        SmoothedPositionBinding = newPos;
+    }
+
     Vector3 EvaluateBinding(PluginCameraHelper helper, string binding)
     {
         switch (binding)
