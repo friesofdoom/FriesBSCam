@@ -170,7 +170,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 transitionToMenu = true;
 
                 // If we previously were in a Song Specific settings file, go back to the default settings file
-                if (CameraPluginSettings.SongSpecific)
+                // if (CameraPluginSettings.SongSpecific) // try loading the setting each time we go into the menu - they can become corrupt when beat saber restarts
                 {
                     Log("Loading up default settings file");
                     CameraPluginSettings.LoadSettings();
@@ -297,8 +297,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     Vector3 targetLookAtPosition = currentCameraData.EvaluateLookAtBindingBinding(_helper);
                     orbitalHeightTarget = targetPosition.y;
 
-                    // TODO: Change this test to be based on the currentOrbitalAngle
-                    if (!currentCameraData.ReleaseBehindPlayer || Mathf.Sin(currentOrbitalAngle) < -0.5f)
+                    if (inMenu || !currentCameraData.ReleaseBehindPlayer || Mathf.Sin(currentOrbitalAngle) < -0.5f)
                     {
                         UpdateCameraChange();
                     }
@@ -313,7 +312,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
                     currentCameraTransition.targetPosition = targetPosition + rotationVector * currentOrbitalDistance;
                     currentCameraTransition.targetPosition.y = currentOrbitalHeight;
-                    currentCameraTransition.targetRotation = Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized) * biasQuat; ;
+                    currentCameraTransition.targetRotation = biasQuat * Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized);
                     break;
                 }
             case CameraType.LookAt:
@@ -321,7 +320,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     UpdateCameraChange();
                     Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
                     currentCameraTransition.targetPosition = targetPosition;
-                    currentCameraTransition.targetRotation = Quaternion.LookRotation(currentCameraData.LookAt) * biasQuat; ;
+                    currentCameraTransition.targetRotation = biasQuat * Quaternion.LookRotation(currentCameraData.LookAt);
                     break;
                 }
         }
@@ -344,7 +343,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         }
 
         PositionAndRotation frameCameraPose = currentCameraTransition.getInterTransitionPositionAndRotation(_timeSinceSceneStarted);
-        updateCameraPose(frameCameraPose.position, frameCameraPose.rotation);
+        UpdateGameCameraPose(frameCameraPose.position, frameCameraPose.rotation);
     }
 
     // OnLateUpdate is called after OnUpdate also everyframe and has a higher chance that transform updates are more recent.
@@ -514,7 +513,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         Log("New Camera Transition:" + currentCameraTransition.ToString());
     }
 
-    private void updateCameraPose(Vector3 position, Quaternion rotation)
+    private void UpdateGameCameraPose(Vector3 position, Quaternion rotation)
     {
         CurrentCameraPosition = position;
         CurrentCameraRotation = rotation;
