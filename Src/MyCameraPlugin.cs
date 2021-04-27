@@ -204,9 +204,19 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     Log("Song Hash: " + beatSaberStatus.songHash);
                     Log("Level ID: " + beatSaberStatus.levelId);
 
+                    Log("Other BSS Data:");
+                    Log("score: " + beatSaberStatus.score);
+                    Log("currentMaxScore: " + beatSaberStatus.paused);
+                    Log("connected: " + beatSaberStatus.connected);
+                    Log("menu: " + beatSaberStatus.menu);
+
                     // We need to check to see if there is a song-specific settings file, and if so, load that instead
                     Log("Checking to see if there are song-specific Settings");
-                    CameraPluginSettings.LoadSettings(beatSaberStatus.songHash + ".txt");
+
+                    if (beatSaberStatus.songHash != null && beatSaberStatus.songHash != "")
+                    {
+                        CameraPluginSettings.LoadSettings(beatSaberStatus.songHash + ".txt");
+                    }
 
                     if (CameraPluginSettings.SongSpecific)
                     {
@@ -248,7 +258,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             if (CameraPluginSettings.Debug && beatSaberStatus.debug.Count > 0)
             {
                 // Write debug messages from HTTPStatus
-                Log(beatSaberStatus.debug[0]);
+                Log("BSS: " + beatSaberStatus.debug[0]);
                 beatSaberStatus.debug.RemoveAt(0);
             }
 
@@ -275,6 +285,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             // No HTTPStatus available so always increment the timer
             _elapsedTime += Time.deltaTime;
+            inMenu = false;
         }
 
         // Moving _timeSinceSceneStarted out here to always update, as opposed to only updating when either inGame or when HTTPStatus isn't used
