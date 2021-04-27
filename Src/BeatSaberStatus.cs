@@ -55,8 +55,6 @@ public class BeatSaberStatus
 			connected = true;
 			JObject received = JObject.Parse(e.Data);
 
-
-
 			if (received["event"].ToString() == "songStart")
 			{
 				debug.Add("SongStart");
@@ -139,11 +137,10 @@ public class BeatSaberStatus
 			}
 		};
 
-		reconnectTimer = new Timer(2000);
+		reconnectTimer = new Timer(500);
 		reconnectTimer.AutoReset = true;
 		reconnectTimer.Elapsed += wsConnect;
 		reconnectTimer.Enabled = true;
-
 	}
 
 	private void wsConnect(Object source, ElapsedEventArgs t)
@@ -164,6 +161,5 @@ public class BeatSaberStatus
 	{
 		reconnectTimer.Dispose();
 		ws.CloseAsync();
-
 	}
 }

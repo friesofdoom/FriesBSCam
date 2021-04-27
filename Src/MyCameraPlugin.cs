@@ -170,7 +170,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 transitionToMenu = true;
 
                 // If we previously were in a Song Specific settings file, go back to the default settings file
-                if (CameraPluginSettings.SongSpecific)
+                // if (CameraPluginSettings.SongSpecific) // try loading the setting each time we go into the menu - they can become corrupt when beat saber restarts
                 {
                     Log("Loading up default settings file");
                     CameraPluginSettings.LoadSettings();
@@ -204,9 +204,19 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     Log("Song Hash: " + beatSaberStatus.songHash);
                     Log("Level ID: " + beatSaberStatus.levelId);
 
+                    Log("Other BSS Data:");
+                    Log("score: " + beatSaberStatus.score);
+                    Log("currentMaxScore: " + beatSaberStatus.paused);
+                    Log("connected: " + beatSaberStatus.connected);
+                    Log("menu: " + beatSaberStatus.menu);
+
                     // We need to check to see if there is a song-specific settings file, and if so, load that instead
                     Log("Checking to see if there are song-specific Settings");
-                    CameraPluginSettings.LoadSettings(beatSaberStatus.songHash + ".txt");
+
+                    if (beatSaberStatus.songHash != null && beatSaberStatus.songHash != "")
+                    {
+                        CameraPluginSettings.LoadSettings(beatSaberStatus.songHash + ".txt");
+                    }
 
                     if (CameraPluginSettings.SongSpecific)
                     {
@@ -248,7 +258,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             if (CameraPluginSettings.Debug && beatSaberStatus.debug.Count > 0)
             {
                 // Write debug messages from HTTPStatus
-                Log(beatSaberStatus.debug[0]);
+                Log("BSS: " + beatSaberStatus.debug[0]);
                 beatSaberStatus.debug.RemoveAt(0);
             }
 
@@ -275,6 +285,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             // No HTTPStatus available so always increment the timer
             _elapsedTime += Time.deltaTime;
+            inMenu = false;
         }
 
         // Moving _timeSinceSceneStarted out here to always update, as opposed to only updating when either inGame or when HTTPStatus isn't used
@@ -296,8 +307,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     Vector3 targetLookAtPosition = currentCameraData.EvaluateLookAtBindingBinding(_helper);
                     orbitalHeightTarget = targetPosition.y;
 
-                    // TODO: Change this test to be based on the currentOrbitalAngle
-                    if (!currentCameraData.ReleaseBehindPlayer || Mathf.Sin(currentOrbitalAngle) < -0.5f)
+                    if (inMenu || !currentCameraData.ReleaseBehindPlayer || Mathf.Sin(currentOrbitalAngle) < -0.5f)
                     {
                         UpdateCameraChange();
                     }
@@ -325,16 +335,15 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 }
         }
 
+        var biasAxis = currentCameraTransition.targetRotation * Vector3.up;
+        var biasQuat = Quaternion.AngleAxis(CameraPluginSettings.GlobalBias, biasAxis);
+        currentCameraTransition.targetRotation = biasQuat * currentCameraTransition.targetRotation;
+
         BlendCameraPose();
     }
 
     void BlendCameraPose()
     {
-        var biasAngle = CameraPluginSettings.GlobalBias * (float)Math.PI / 180.0f;
-        Quaternion targetCameraRotationAdjustedForBias = Quaternion.EulerAngles(0.0f, biasAngle, 0.0f) * currentCameraTransition.targetRotation;
-        Vector3 targetCameraPosition = currentCameraTransition.targetPosition;
-
-        
         if (currentCameraType == CameraType.Orbital)
         {
             var targetLerpBlendTime = 10.0f;
@@ -348,7 +357,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         }
 
         PositionAndRotation frameCameraPose = currentCameraTransition.getInterTransitionPositionAndRotation(_timeSinceSceneStarted);
-        updateCameraPose(frameCameraPose.position, frameCameraPose.rotation);
+        UpdateGameCameraPose(frameCameraPose.position, frameCameraPose.rotation);
     }
 
     // OnLateUpdate is called after OnUpdate also everyframe and has a higher chance that transform updates are more recent.
@@ -518,7 +527,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         Log("New Camera Transition:" + currentCameraTransition.ToString());
     }
 
-    private void updateCameraPose(Vector3 position, Quaternion rotation)
+    private void UpdateGameCameraPose(Vector3 position, Quaternion rotation)
     {
         CurrentCameraPosition = position;
         CurrentCameraRotation = rotation;

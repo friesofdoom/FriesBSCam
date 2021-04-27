@@ -55,7 +55,7 @@ public class CameraData
         SmoothedLookAtBinding = SmoothedLookAtBinding * (1.0f - filter) + newLookat * filter;
         return SmoothedLookAtBinding;
     }
-
+    
     Vector3 EvaluateBinding(PluginCameraHelper helper, string binding)
     {
         switch (binding)
