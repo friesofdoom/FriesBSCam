@@ -299,7 +299,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
      */
     public void UpdateCameraPose()
     {
-        var biasQuat = Quaternion.Euler(0.0f, CameraPluginSettings.GlobalBias, 0.0f);
         switch (currentCameraType)
         {
             case CameraType.Orbital:
@@ -323,7 +322,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
                     currentCameraTransition.targetPosition = targetPosition + rotationVector * currentOrbitalDistance;
                     currentCameraTransition.targetPosition.y = currentOrbitalHeight;
-                    currentCameraTransition.targetRotation = biasQuat * Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized);
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation((targetLookAtPosition - currentCameraTransition.targetPosition).normalized);
                     break;
                 }
             case CameraType.LookAt:
@@ -331,10 +330,14 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     UpdateCameraChange();
                     Vector3 targetPosition = currentCameraData.EvaluatePositionBinding(_helper);
                     currentCameraTransition.targetPosition = targetPosition;
-                    currentCameraTransition.targetRotation = biasQuat * Quaternion.LookRotation(currentCameraData.LookAt);
+                    currentCameraTransition.targetRotation = Quaternion.LookRotation(currentCameraData.LookAt);
                     break;
                 }
         }
+
+        var biasAxis = currentCameraTransition.targetRotation * Vector3.up;
+        var biasQuat = Quaternion.AngleAxis(CameraPluginSettings.GlobalBias, biasAxis);
+        currentCameraTransition.targetRotation = biasQuat * currentCameraTransition.targetRotation;
 
         BlendCameraPose();
     }
