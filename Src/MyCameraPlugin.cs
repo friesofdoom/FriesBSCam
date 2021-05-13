@@ -50,7 +50,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     PluginCameraHelper _helper;
     float _elapsedTime = 0.0f;
     float _timeSinceSceneStarted = 0.0f;
-    float nextChangeTimer = 0.0f;
+    float _nextChangeTimer = 0.0f;
     bool useHttpStatus = false;
     bool inMenu = false;
     bool inGame = false;
@@ -166,7 +166,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 Log("Transitioning to inMenu");
                 inGame = false;
                 _elapsedTime = 2.0f;
-                nextChangeTimer = 1.0f;
+                _nextChangeTimer = 1.0f;
                 transitionToMenu = true;
 
                 // If we previously were in a Song Specific settings file, go back to the default settings file
@@ -182,7 +182,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             {
                 // We're still in the menu so reset the timer
                 _elapsedTime = 0.0f;
-                nextChangeTimer = 1.0f;
+                _nextChangeTimer = 1.0f;
             }
         }
         else
@@ -192,7 +192,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 Log("Transitioning to inGame");
                 inGame = true;
                 _elapsedTime = 2.0f;
-                nextChangeTimer = 1.0f;
+                _nextChangeTimer = 1.0f;
 
                 if (useHttpStatus)
                 {
@@ -233,7 +233,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             //We're paused, don't do anything
         }
-        else if (_elapsedTime >= nextChangeTimer || transitionToMenu)
+        else if (_elapsedTime >= _nextChangeTimer || transitionToMenu)
         {
             transitionToNextCamera(transitionToMenu);
         }
@@ -271,11 +271,11 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             else
             {
                 inMenu = false;
-                
+
                 // Don't start the timer until we hit our first note, also check for pause
                 // This allows us to have 'synced' song-specific camera files as different systems will load songs at different speeds
                 // based on storage and cpu performance. Just...don't miss the first note I guess?
-                if (beatSaberStatus.score > 0 && !beatSaberStatus.paused)
+                if ((beatSaberStatus.score > 0 && !beatSaberStatus.paused) || beatSaberStatus.songHash == null || beatSaberStatus.songHash == "")
                 {
                     _elapsedTime += Time.deltaTime;
                 }
@@ -453,16 +453,16 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
             if (CameraPluginSettings.SongSpecific)
             {
-                nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
+                _nextChangeTimer = _elapsedTime + currentCameraData.ActualTime;
             }
             else
             {
                 var minTime = currentCameraData.MinTime;
                 var maxTime = currentCameraData.MaxTime;
-                nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
+                _nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
             }
 
-            Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + nextChangeTimer.ToString() + "s");
+            Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + _nextChangeTimer.ToString() + "s");
             Log(_timeSinceSceneStarted.ToString() + "s since last scene change.");
         }
 
@@ -536,7 +536,10 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         if(_frameLogAttemptCounter % 30 == 0)
         {
             Log("\tScene Time: " + Math.Round(_timeSinceSceneStarted, 2).ToString() );
-            Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString() + "\n");
+            Log("\tElapsedTime Time: " + Math.Round(_elapsedTime, 2).ToString() );
+            Log("\tNextChangeTimer: " + Math.Round(_nextChangeTimer, 2).ToString() );
+            Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString());
+            Log("\tPaused: " + (useHttpStatus && beatSaberStatus.paused).ToString() + "\n");
         }
     }
 }
