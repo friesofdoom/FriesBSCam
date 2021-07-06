@@ -1,165 +1,156 @@
 ﻿using System;
 using System.Collections.Generic;
-using WebSocketSharp;
-using Newtonsoft.Json.Linq;
 using System.Timers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using WebSocketSharp;
 
-public class BeatSaberStatus
+namespace FriesBSCameraPlugin
 {
-	public int score = 0;//CurrentScore
-	public int currentMaxScore = 0;//currentMaxScore possible
-	public string rank = "SSS";//Rank
-	public int combo = 0;//Combo
-	public bool menu = true;//In-menu?
-	public bool paused = false;
-	public bool connected = false;
-	public string type = "";//game type
-	public string songName = "";
-	public string songSubName = "";
-	public string songAuthorName = "";
-	public string levelAuthorName = "";
-	public string songHash = "";
-	public string levelId = "";
-
-	public string cover = "empty";
-
-	//public List<string> received = new List<string>();
-	public List<string> debug = new List<string>(); //debug messages. 
-	private WebSocket ws;
-
-	private static Timer reconnectTimer;
-
-
-	public void ScoreUpdate(JToken perf)
+	public class BeatMap
 	{
-		score = (int)perf["score"];
-		currentMaxScore = (int)perf["currentMaxScore"];
-		rank = perf["rank"].ToString();
-		combo = (int)perf["combo"];
-		//debug.Add("Score: " + score + " CurrentMaxScore: " + currentMaxScore + " ");
+		[JsonProperty("songCover")] public string SongCover { get; set; }
+		[JsonProperty("songName")] public string SongName { get; set; }
+		[JsonProperty("songSubName")] public string SongSubName { get; set; }
+		[JsonProperty("songAuthorName")] public string SongAuthorName { get; set; }
+		[JsonProperty("levelAuthorName")] public string LevelAuthorName { get; set; }
+		[JsonProperty("songHash")] public string SongHash { get; set; }
+		[JsonProperty("levelId")] public string LevelId { get; set; }
 	}
 
-	public BeatSaberStatus()
+	internal enum EventType
 	{
+		songStart,
+		noteMissed,
+		scoreChanged,
+		menu,
+		pause,
+		resume
+	}
 
-		//the constructor, I think. 
-		ws = new WebSocket("ws://localhost:6557/socket");
-		ws.OnOpen += (sender, e) =>
+	public class BeatSaberStatus
+	{
+		public int score;//CurrentScore
+		public bool menu = true;//In-menu?
+		public bool paused;
+		public bool connected;
+		public BeatMap map;
+
+		//public List<string> received = new List<string>();
+		public readonly List<string> debug = new List<string>(); //debug messages. 
+		private readonly WebSocket _ws = new WebSocket("ws://localhost:6557/socket");
+
+		private static Timer _reconnectTimer;
+
+
+		private void ScoreUpdate(JToken perf)
 		{
-			//socket open. 
-			debug.Add("Should have connected to BS");
-		};
-		ws.OnMessage += (sender, e) =>
+			score = (int)perf["score"];
+			//debug.Add("Score: " + score + " CurrentMaxScore: " + currentMaxScore + " ");
+		}
+
+		public BeatSaberStatus()
 		{
-			//debug.Add(e.Data);
-			connected = true;
-			JObject received = JObject.Parse(e.Data);
-
-			if (received["event"].ToString() == "songStart")
+			_ws.OnOpen += (sender, e) => debug.Add("Should have connected to BS");
+		
+			_ws.OnMessage += (sender, e) =>
 			{
-				debug.Add("SongStart");
-				score = 0;
-				currentMaxScore = 0;
-				rank = "SSS";
-				combo = 0;
-				cover = received["status"]["beatmap"]["songCover"].ToString();
-				songName = received["status"]["beatmap"]["songName"].ToString();
-				songSubName = received["status"]["beatmap"]["songSubName"].ToString();
-				songAuthorName = received["status"]["beatmap"]["songAuthorName"].ToString();
-				levelAuthorName = received["status"]["beatmap"]["levelAuthorName"].ToString();
-				songHash = received["status"]["beatmap"]["songHash"].ToString();
-				levelId = received["status"]["beatmap"]["levelId"].ToString();
-				menu = false;
-				paused = false;
-				debug.Add("Songname is " + songName);
-			}
+				connected = true;
+				
+				// Convert incoming data
+				var received = JObject.Parse(e.Data);
+				if (received["status"]?["beatmap"] == null || received["event"] == null) return;
+				if (Enum.TryParse(received["event"].ToString(), out EventType eventType)) return;
 
-			if (
-				received["event"].ToString() == "noteMissed"
-				||
-				received["event"].ToString() == "scoreChanged"
-				)
+				switch (eventType)
+				{
+					case EventType.songStart:
+						debug.Add("SongStart");
+						score = 0;
+						map = received["status"]["beatmap"].ToObject<BeatMap>();
+						menu = false;
+						paused = false;
+						debug.Add("Song name is " + map?.SongName);
+						break;
+					
+					case EventType.noteMissed:
+					case EventType.scoreChanged:
+						menu = false;
+						paused = false;
+						ScoreUpdate(received["status"]["performance"]);
+						break;
+					
+					case EventType.menu:
+						paused = false;
+						menu = true;
+						break;
+					
+					case EventType.pause:
+						paused = true;
+						break;
+					
+					case EventType.resume:
+						paused = false;
+						break;
+					
+					default:
+						return;
+				}
+			};
+			
+			_ws.OnClose += (sender, e) =>
 			{
-				menu = false;
-				paused = false;
-				ScoreUpdate(received["status"]["performance"]);
-			}
-			if (received["event"].ToString() == "menu")
+				// Closed
+				debug.Add("Closed");
+				_reconnectTimer.Start();
+			};
+			
+			_ws.OnError += (sender, e) =>
 			{
-				paused = false;
-				menu = true;
-			}
-
-			if (received["event"].ToString() == "pause")
-            {
-				paused = true;
-            }
-			if (received["event"].ToString() == "resume")
-            {
-				paused = false;
-            }
-
-			//received.Add(e.Data);
-			//message. Just add this to the bottom of the responses list. 
-		};
-		ws.OnClose += (sender, e) =>
-		{
-			debug.Add("Closed");
-			//closed
-			reconnectTimer.Start();
-		};
-		ws.OnError += (sender, e) =>
-		{
-			//Some error. 
-			debug.Add(e.Message);
-			if (e.Message.Contains("OnMessage event"))
-			{
-				debug.Add("Beatsaber websocket error: OnMessage event");
-				debug.Add("Sender is: " + sender.ToString());
-				debug.Add("Verbose error is: " + e.Message.ToString());
-			}
-			else
-			{
-
+				//Some error. 
+				debug.Add(e.Message);
+				if (e.Message.Contains("OnMessage event"))
+				{
+					debug.Add("Beat Saber websocket error: OnMessage event");
+					debug.Add("Sender is: " + sender);
+					debug.Add("Verbose error is: " + e.Message.ToString());
+					return;
+				}
 
 				if (e.Message.Contains("occurred in closing the connection"))
-				{
-					debug.Add("Webwsocket error in closing");
-				}
+					debug.Add("Websocket error in closing");
 				else
 				{
-					if (ws.IsAlive)
-					{
-						debug.Add("Error wasn't about something closing. So I'm attempting to close it so it can restart");
-						ws.CloseAsync();
-					}
+					if (!_ws.IsAlive) return;
+					
+					debug.Add(
+						"Error wasn't about something closing. So I'm attempting to close it so it can restart");
+					_ws.CloseAsync();
 				}
+			};
+
+			_reconnectTimer = new Timer(500) {AutoReset = true};
+			_reconnectTimer.Elapsed += WsConnect;
+			_reconnectTimer.Enabled = true;
+		}
+
+		private void WsConnect(object source, ElapsedEventArgs t)
+		{
+			debug.Add("Timer Fired. " + t.SignalTime);
+			if (_ws.IsAlive)
+				debug.Add("IsAlive = true. Should be connected.");
+			else
+			{
+				debug.Add("IsAlive = false. Try to connect.");
+				_ws.ConnectAsync();
+				_reconnectTimer.Stop();
 			}
-		};
-
-		reconnectTimer = new Timer(500);
-		reconnectTimer.AutoReset = true;
-		reconnectTimer.Elapsed += wsConnect;
-		reconnectTimer.Enabled = true;
-	}
-
-	private void wsConnect(Object source, ElapsedEventArgs t)
-	{
-		debug.Add("Timer Fired. " + t.SignalTime);
-		if (ws.IsAlive)
-		{
-			debug.Add("IsAlive = true. Should be connected.");
 		}
-		else
+		
+		public void ShutDown()
 		{
-			debug.Add("IsAlive = false. Try to connect.");
-			ws.ConnectAsync();
-			reconnectTimer.Stop();
+			_reconnectTimer.Dispose();
+			_ws.CloseAsync();
 		}
-	}
-	public void shutDown()
-	{
-		reconnectTimer.Dispose();
-		ws.CloseAsync();
 	}
 }

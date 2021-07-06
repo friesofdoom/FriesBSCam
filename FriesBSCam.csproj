@@ -54,12 +54,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Src\AttributeParser.cs" />
     <Compile Include="Src\BeatSaberStatus.cs" />
     <Compile Include="Src\Camera\CameraData.cs" />
     <Compile Include="Src\Camera\CameraTransition.cs" />
     <Compile Include="Src\MyCameraPlugin.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Src\DefaultConfig.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeResolveReferences">
