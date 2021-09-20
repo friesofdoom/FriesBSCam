@@ -7,11 +7,6 @@ Feel free to use and/or modify this plugin how ever you want. No credit required
 
 Comments and feature requests are welcome.
 
-# Camera Demo
-Here you can see a quick demo of the camera plugin in action.\
-[![Camera Demo](https://img.youtube.com/vi/YoIeM9ckE90/0.jpg)](https://www.youtube.com/watch?v=YoIeM9ckE90) \
-[![Camera Demo](https://img.youtube.com/vi/g-GKGbQPh2k/0.jpg)](https://www.youtube.com/watch?v=g-GKGbQPh2k)
-
 # Installation Instructions 
 Download the DLL from the assets in the latest release - https://github.com/friesofdoom/FriesBSCam/releases/ \
 Copy the dll file into:\
