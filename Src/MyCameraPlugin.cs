@@ -88,13 +88,17 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
 
     // Constructor is called when plugin loads
-    public MyCameraPlugin() { }
+    public MyCameraPlugin()
+    {
+        ApplySettings = ApplySettingsFn;
+    }
 
     // OnActivate function is called when your camera behaviour was selected by the user.
     // The pluginCameraHelper is provided to you to help you with Player/Camera related operations.
     public void OnActivate(PluginCameraHelper helper)
     {
-
+        helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask |= 1 << 9;
+        //helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
         Application.logMessageReceived += LogError;
 
         string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -365,10 +369,17 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     }
 
+    void ApplySettingsFn(object sender, EventArgs e)
+    { }
+
     // OnDeactivate is called when the user changes the profile to other camera behaviour or when the application is about to close.
     // The camera behaviour should clean everything it created when the behaviour is deactivated.
-    public void OnDeactivate() {
-        ApplySettings?.Invoke(this, EventArgs.Empty);
+    public void OnDeactivate()
+    {
+        Log("Camera plugin OnDeactivate.");
+        beatSaberStatus.shutDown();
+        _helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
+        logStream.Close();
     }
 
     // OnDestroy is called when the users selects a camera behaviour which is not a plugin or when the application is about to close.
