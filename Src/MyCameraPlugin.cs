@@ -97,7 +97,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // The pluginCameraHelper is provided to you to help you with Player/Camera related operations.
     public void OnActivate(PluginCameraHelper helper)
     {
-        helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask |= 1 << 9;
+        //helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask |= 1 << 9;
         //helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
         Application.logMessageReceived += LogError;
 
@@ -378,7 +378,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     {
         Log("Camera plugin OnDeactivate.");
         beatSaberStatus.shutDown();
-        _helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
+        //_helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
         logStream.Close();
     }
 
