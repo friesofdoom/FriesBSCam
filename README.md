@@ -3,14 +3,7 @@
 Beat saber camera for Liv made by fries.\
 This plugin will smoothly and randomly blend between any number of pre-defined cameras, both static and orbital.
 
-Feel free to use and/or modify this plugin how ever you want. No credit required. But if you do want to thank me, drop a link to my YouTube channel somewhere in your video description - https://www.youtube.com/channel/UCrQWyvE44R5G6_Ho88OfQYA
-
 Comments and feature requests are welcome.
-
-# Camera Demo
-Here you can see a quick demo of the camera plugin in action.\
-[![Camera Demo](https://img.youtube.com/vi/YoIeM9ckE90/0.jpg)](https://www.youtube.com/watch?v=YoIeM9ckE90) \
-[![Camera Demo](https://img.youtube.com/vi/g-GKGbQPh2k/0.jpg)](https://www.youtube.com/watch?v=g-GKGbQPh2k)
 
 # Installation Instructions 
 Download the DLL from the assets in the latest release - https://github.com/friesofdoom/FriesBSCam/releases/ \
@@ -93,9 +86,6 @@ If it finds said file, it will clear out the current dynamic cameras for the cam
 ActualTime allows you to specify how long to stay on a specific camera before it moves onto the next, giving you greater control of movement.\
 (Note, the first timer does not start until score changes - this is to allow different PCs to load up the song properly to sync multiple players.)\
 You can find the songhash in the output.txt file that's generated while in game and a song is loaded.
-
-### Song Specific Demo
-[![Song Specific Demo](https://img.youtube.com/vi/BTwlqemL8Ak/0.jpg)](https://www.youtube.com/watch?v=BTwlqemL8Ak)
 
 ### Configuring Song Specific files
 Example in output.txt as songs load:
