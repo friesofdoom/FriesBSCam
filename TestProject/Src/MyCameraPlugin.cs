@@ -86,6 +86,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     private int _frameLogAttemptCounter = 0;
 
+    AudioLink.Scripts.AudioLink _audioLink;// = new AudioLink.Scripts.AudioLink();
+
 
     // Constructor is called when plugin loads
     public MyCameraPlugin()
@@ -111,6 +113,10 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         logStream = new StreamWriter(outputLoc);
 
         Log("Startup");
+
+        Log("Starting AudioLink");
+        _audioLink = new AudioLink.Scripts.AudioLink(helper.behaviour.manager.camera.gameObject);
+        Log("AudioLink Started");
 
         Log("Loading Settings");
         CameraPluginSettings.LoadSettings();
@@ -249,6 +255,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // and has not been updated yet. If that is a concern, it is recommended to use OnLateUpdate instead.
     public void OnUpdate()
     {
+        _audioLink.Tick();
+
         // Allows us to track when HTTPStatus first makes a connecction
         if (!useHttpStatus && beatSaberStatus.connected)
         {
