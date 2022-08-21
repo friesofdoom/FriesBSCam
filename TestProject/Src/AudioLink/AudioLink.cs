@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using AudioLink.Assets;
 //using IPA.Utilities;
 //using JetBrains.Annotations;
@@ -76,10 +77,12 @@ namespace AudioLink.Scripts
         //private readonly AudioSource _audioSource;
 
         private readonly Material _audioMaterial;
-
+        private float _volume = 0.0f;
+        private readonly byte[] _rawData;
         private readonly float[] _audioFramesL = new float[1023 * 4];
         private readonly float[] _audioFramesR = new float[1023 * 4];
         private readonly float[] _samples = new float[1023];
+        private int _numChannels = 2;
 
         // Mechanism to provide sync'd instance time to all avatars.
         private double _elapsedTime;
@@ -97,16 +100,58 @@ namespace AudioLink.Scripts
         MyAudioRecorder_PlayerwMixer.clsWinMMBase.WAVEFORMATEX _wavFmt;
         public AudioLink(GameObject gameObject)
         {
-            MyCameraPlugin.Log("AudioLink Startup");
 
-            MyCameraPlugin.Log("LoadFromMemoryAsync");
+            string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string settingLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
+
+            settingLoc = Path.Combine(settingLoc, "AudioLinkSettings.txt");
+
+            if (!File.Exists(@settingLoc))
+            {
+                // Create a default settings file.
+                using (var ws = new StreamWriter(@settingLoc))
+                {
+                    ws.WriteLine("Volume='50.0'");
+                    ws.WriteLine("Device=''");
+                }
+            }
+
+            // Open the file to read from.
+            string readText = File.ReadAllText(@settingLoc);
+
+            var root = new ReflectionToken();
+
+            AttributeParser parser = new AttributeParser(root);
+            parser.Tokenize(readText);
+
+            _volume = CameraPluginSettings.ParseFloat(root.GetChildSafe("Volume"));
+            string device = root.GetChildSafe("Device").mValue;
+
+            MyCameraPlugin.Log("AudioLink Startup");
+            MyCameraPlugin.Log("Loading Asset Bundle from Memory");
             AssetBundleManager.LoadFromMemoryAsync();
 
-            MyCameraPlugin.Log("Creating AudioSource");
-//             _audioSource = gameObject.AddComponent<AudioSource>();
-//             _audioSource.clip = Microphone.Start("Line (Realtek USB2.0 Audio)", true, 10, 44100);
-//             _audioSource.loop = true;
-//             _audioSource.Play();
+            MyCameraPlugin.Log("Starting Audio Capture");
+            var result = FriesBSCameraPlugin.AudioCapture.Init(device);
+            if (result == 0)
+                MyCameraPlugin.Log("Done");
+            else
+                MyCameraPlugin.Log("Error: " + result);
+
+            var numDevices = FriesBSCameraPlugin.AudioCapture.GetNumDevices();
+            MyCameraPlugin.Log("Device List: " + numDevices);
+            for (int i = 0; i < numDevices; i++)
+            {
+                device = FriesBSCameraPlugin.AudioCapture.GetDeviceName(i);
+                MyCameraPlugin.Log("    " + device);
+            }
+
+            var selectedDevice = FriesBSCameraPlugin.AudioCapture.GetSelectedDeviceName();
+            MyCameraPlugin.Log("Selected Device: " + selectedDevice);
+
+            _numChannels = FriesBSCameraPlugin.AudioCapture.GetNumChannels();
+            _rawData = new byte[1023 * 4 * 2 * _numChannels];
+            MyCameraPlugin.Log("Num Channels: " + _numChannels);
 
             MyCameraPlugin.Log("Done");
 
@@ -277,30 +322,60 @@ namespace AudioLink.Scripts
             }
         }
 
+        private bool GetSamples()
+        {
+            FriesBSCameraPlugin.AudioCapture.ReadData(_rawData, _rawData.Length);
+
+            bool rv = false;
+            int index = 0;
+            short s;
+            int step = 2 * _numChannels;
+            byte[] b = new byte[2];
+
+            for (int i = 0; i < _rawData.Length; i += step)
+            {
+                b[0] = _rawData[i];
+                b[1] = _rawData[i + 1];
+                s = BitConverter.ToInt16(b, 0);
+                _audioFramesL[index] = s / 3276.70f * _volume;
+                if (_numChannels == 2)
+                {
+                    b[0] = _rawData[i + 2];
+                    b[1] = _rawData[i + 3];
+                    s = BitConverter.ToInt16(b, 0);
+                    _audioFramesR[index] = s / 3276.70f * _volume;
+                }
+                else _audioFramesR[index] = _audioFramesL[index];
+
+                index++;
+            }
+            return rv;
+        }
+
         private void SendAudioOutputData()
         {
-//             _audioSource.GetOutputData(_audioFramesL, 0);                // left channel
-// 
-//             if (_rightChannelTestCounter > 0)
-//             {
-//                 if (_ignoreRightChannel)
-//                 {
-//                     Array.Copy(_audioFramesL, 0, _audioFramesR, 0, 4092);
-//                 }
-//                 else
-//                 {
-//                     _audioSource.GetOutputData(_audioFramesR, 1);
-//                 }
-// 
-//                 _rightChannelTestCounter--;
-//             }
-//             else
-//             {
-//                 _rightChannelTestCounter = RIGHT_CHANNEL_TEST_DELAY;      // reset test countdown
-//                 _audioFramesR[0] = 0f;                                  // reset tested array element to zero just in case
-//                 _audioSource.GetOutputData(_audioFramesR, 1);            // right channel test
-//                 _ignoreRightChannel = _audioFramesR[0] == 0f;
-//             }
+            //             _audioSource.GetOutputData(_audioFramesL, 0);                // left channel
+            // 
+            //             if (_rightChannelTestCounter > 0)
+            //             {
+            //                 if (_ignoreRightChannel)
+            //                 {
+            //                     Array.Copy(_audioFramesL, 0, _audioFramesR, 0, 4092);
+            //                 }
+            //                 else
+            //                 {
+            //                     _audioSource.GetOutputData(_audioFramesR, 1);
+            //                 }
+            // 
+            //                 _rightChannelTestCounter--;
+            //             }
+            //             else
+            //             {
+            //                 _rightChannelTestCounter = RIGHT_CHANNEL_TEST_DELAY;      // reset test countdown
+            //                 _audioFramesR[0] = 0f;                                  // reset tested array element to zero just in case
+            //                 _audioSource.GetOutputData(_audioFramesR, 1);            // right channel test
+            //                 _ignoreRightChannel = _audioFramesR[0] == 0f;
+            //             }
 
             //float a = 0;
             //foreach (var b in _samples) a += b * b;
@@ -308,23 +383,24 @@ namespace AudioLink.Scripts
             //{
             //    MyCameraPlugin.Log("num samples: " + _record.LeftSamples.Length);
             //}
+            GetSamples();
 
-            Array.Copy(_record.LeftSamples, 0, _samples, 0, 1023); // 4092 - 1023 * 4
+            Array.Copy(_audioFramesL, 0, _samples, 0, 1023); // 4092 - 1023 * 4
             _audioMaterial.SetFloatArray(_samples0L, _samples);
-            Array.Copy(_record.LeftSamples, 1023, _samples, 0, 1023); // 4092 - 1023 * 3
+            Array.Copy(_audioFramesL, 1023, _samples, 0, 1023); // 4092 - 1023 * 3
             _audioMaterial.SetFloatArray(_samples1L, _samples);
-            Array.Copy(_record.LeftSamples, 2046, _samples, 0, 1023); // 4092 - 1023 * 2
+            Array.Copy(_audioFramesL, 2046, _samples, 0, 1023); // 4092 - 1023 * 2
             _audioMaterial.SetFloatArray(_samples2L, _samples);
-            Array.Copy(_record.LeftSamples, 3069, _samples, 0, 1023); // 4092 - 1023 * 1
+            Array.Copy(_audioFramesL, 3069, _samples, 0, 1023); // 4092 - 1023 * 1
             _audioMaterial.SetFloatArray(_samples3L, _samples);
 
-            Array.Copy(_record.RightSamples, 0, _samples, 0, 1023); // 4092 - 1023 * 4
+            Array.Copy(_audioFramesR, 0, _samples, 0, 1023); // 4092 - 1023 * 4
             _audioMaterial.SetFloatArray(_samples0R, _samples);
-            Array.Copy(_record.RightSamples, 1023, _samples, 0, 1023); // 4092 - 1023 * 3
+            Array.Copy(_audioFramesR, 1023, _samples, 0, 1023); // 4092 - 1023 * 3
             _audioMaterial.SetFloatArray(_samples1R, _samples);
-            Array.Copy(_record.RightSamples, 2046, _samples, 0, 1023); // 4092 - 1023 * 2
+            Array.Copy(_audioFramesR, 2046, _samples, 0, 1023); // 4092 - 1023 * 2
             _audioMaterial.SetFloatArray(_samples2R, _samples);
-            Array.Copy(_record.RightSamples, 3069, _samples, 0, 1023); // 4092 - 1023 * 1
+            Array.Copy(_audioFramesR, 3069, _samples, 0, 1023); // 4092 - 1023 * 1
             _audioMaterial.SetFloatArray(_samples3R, _samples);
         }
     }
