@@ -86,7 +86,9 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     private int _frameLogAttemptCounter = 0;
 
-    AudioLink.Scripts.AudioLink _audioLink;// = new AudioLink.Scripts.AudioLink();
+    AudioLink.Scripts.AudioLink _audioLink = null;
+
+    System.Threading.Timer _audioLinkTimer;
 
 
     // Constructor is called when plugin loads
@@ -117,7 +119,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         if (_audioLink == null)
         {
             Log("Starting AudioLink");
-            _audioLink = new AudioLink.Scripts.AudioLink(helper.behaviour.manager.camera.gameObject);
+            _audioLink = new AudioLink.Scripts.AudioLink();
             Log("AudioLink Started");
         }
 
@@ -389,18 +391,22 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     public void OnDeactivate()
     {
         Log("Camera plugin OnDeactivate.");
+        Log("    Sutdown Audio Capture.");
+        var res = FriesBSCameraPlugin.AudioCapture.Shutdown();
+        Log("    Audio Capture result: " + res);
         beatSaberStatus.shutDown();
         _helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
+        Log("Camera Deactivate Done.");
         logStream.Close();
     }
 
     // OnDestroy is called when the users selects a camera behaviour which is not a plugin or when the application is about to close.
     // This is the last chance to clean after your self.
-    public void OnDestroy() {
-
+    public void OnDestroy() 
+    {
     }
 
-   private void transitionToNextCamera(bool transitionToMenu)
+    private void transitionToNextCamera(bool transitionToMenu)
     {
         _timeSinceSceneStarted = 0;
 

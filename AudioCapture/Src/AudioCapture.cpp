@@ -1,6 +1,8 @@
 #include "AudioCapture.h"
 #include "Helpers.h"
 #include "common.h"
+#include <chrono>
+#include <thread>
 
 namespace AudioCapture
 {
@@ -8,37 +10,264 @@ namespace AudioCapture
         IMMDevice* pMMDevice;
         bool bInt16;
         HANDLE hStartedEvent;
-        HANDLE hStopEvent;
         UINT32 nFrames;
         HRESULT hr;
     };
 
-    HANDLE hThread;
-    HANDLE hStartedEvent;
-    LoopbackCaptureThreadFunctionArguments threadArgs;
-    WAVEFORMATEX* pwfx;
-    bool errorCondition = false;
+    std::vector<std::wstring> globalDeviceList;
+    IMMDeviceEnumerator* globalMMDeviceEnumerator;
+    HANDLE globalHThread;
+    HANDLE globalHStartedEvent;
+    LoopbackCaptureThreadFunctionArguments globalThreadArgs;
+    WAVEFORMATEX* globalPwfx;
+    bool globalErrorCondition = false;
+    bool globalDone = false;
+    bool globalFinished = false;
+    int globalSleepTime = 100;
 
-    const int bufferSize = 1 * 1024 * 1024; // Must be power of 2
-    int currentWritePos = 0;
-    byte bigBuffer[bufferSize];
+    const int globalBufferSize = 1 * 1024 * 1024; // Must be power of 2
+    int globalCurrentWritePos = 0;
+    byte globalBigBuffer[globalBufferSize];
+
+    class MMNotificationClient : public IMMNotificationClient
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(
+            _In_  LPCWSTR pwstrDeviceId,
+            _In_  DWORD dwNewState)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+            globalErrorCondition = true;
+            return S_OK;
+        }
+
+        virtual HRESULT STDMETHODCALLTYPE OnDeviceAdded(
+            _In_  LPCWSTR pwstrDeviceId)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime)); 
+            globalErrorCondition = true;
+            return S_OK;
+        }
+
+        virtual HRESULT STDMETHODCALLTYPE OnDeviceRemoved(
+            _In_  LPCWSTR pwstrDeviceId)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+            globalErrorCondition = true;
+            return S_OK;
+        }
+
+        virtual HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(
+            _In_  EDataFlow flow,
+            _In_  ERole role,
+            _In_  LPCWSTR pwstrDefaultDeviceId)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime)); 
+            globalErrorCondition = true;
+            return S_OK;
+        }
+
+        virtual HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(
+            _In_  LPCWSTR pwstrDeviceId,
+            _In_  const PROPERTYKEY key)
+        {
+            return S_OK;
+        }
+
+        virtual ULONG STDMETHODCALLTYPE AddRef(void) { return 1; }
+        virtual ULONG STDMETHODCALLTYPE Release(void) { return 1; }
+        IFACEMETHODIMP QueryInterface(REFIID iid, void** object) override
+        {
+            if (iid == IID_IUnknown || iid == __uuidof(IMMNotificationClient))
+            {
+                *object = static_cast<IMMNotificationClient*>(this);
+                return S_OK;
+            }
+            *object = nullptr;
+            return E_NOINTERFACE;
+        };
+    };
+
+    MMNotificationClient globalMMNotificationClient;
+
+
+    HRESULT get_default_device(IMMDevice** ppMMDevice) {
+        HRESULT hr = S_OK;
+
+        // get the default render endpoint
+        hr = globalMMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, ppMMDevice);
+        if (FAILED(hr)) {
+            ERR(L"IMMDeviceEnumerator::GetDefaultAudioEndpoint failed: hr = 0x%08x", hr);
+            return hr;
+        }
+
+        return S_OK;
+    }
+
+    HRESULT list_devices() {
+        HRESULT hr = S_OK;
+
+        IMMDeviceCollection* pMMDeviceCollection;
+
+        // get all the active render endpoints
+        hr = globalMMDeviceEnumerator->EnumAudioEndpoints(
+            eAll, DEVICE_STATE_ACTIVE, &pMMDeviceCollection
+        );
+        if (FAILED(hr)) {
+            ERR(L"IMMDeviceEnumerator::EnumAudioEndpoints failed: hr = 0x%08x", hr);
+            return hr;
+        }
+        ReleaseOnExit releaseMMDeviceCollection(pMMDeviceCollection);
+
+        UINT count;
+        hr = pMMDeviceCollection->GetCount(&count);
+        if (FAILED(hr)) {
+            ERR(L"IMMDeviceCollection::GetCount failed: hr = 0x%08x", hr);
+            return hr;
+        }
+        LOG(L"Active render endpoints found: %u", count);
+
+        for (UINT i = 0; i < count; i++) {
+            IMMDevice* pMMDevice;
+
+            // get the "n"th device
+            hr = pMMDeviceCollection->Item(i, &pMMDevice);
+            if (FAILED(hr)) {
+                ERR(L"IMMDeviceCollection::Item failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            ReleaseOnExit releaseMMDevice(pMMDevice);
+
+            // open the property store on that device
+            IPropertyStore* pPropertyStore;
+            hr = pMMDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
+            if (FAILED(hr)) {
+                ERR(L"IMMDevice::OpenPropertyStore failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            ReleaseOnExit releasePropertyStore(pPropertyStore);
+
+            // get the long name property
+            PROPVARIANT pv; PropVariantInit(&pv);
+            hr = pPropertyStore->GetValue(PKEY_Device_FriendlyName, &pv);
+            if (FAILED(hr)) {
+                ERR(L"IPropertyStore::GetValue failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            PropVariantClearOnExit clearPv(&pv);
+
+            if (VT_LPWSTR != pv.vt) {
+                ERR(L"PKEY_Device_FriendlyName variant type is %u - expected VT_LPWSTR", pv.vt);
+                return E_UNEXPECTED;
+            }
+
+            LOG(L"    %ls", pv.pwszVal);
+            globalDeviceList.push_back(pv.pwszVal);
+        }
+
+        return S_OK;
+    }
+
+    HRESULT get_specific_device(LPCWSTR szLongName, IMMDevice** ppMMDevice) {
+        HRESULT hr = S_OK;
+
+        *ppMMDevice = NULL;
+
+        // get an enumerator
+        
+        IMMDeviceCollection* pMMDeviceCollection;
+
+        // get all the active render endpoints
+        hr = globalMMDeviceEnumerator->EnumAudioEndpoints(
+            eAll, DEVICE_STATE_ACTIVE, &pMMDeviceCollection
+        );
+        if (FAILED(hr)) {
+            ERR(L"IMMDeviceEnumerator::EnumAudioEndpoints failed: hr = 0x%08x", hr);
+            return hr;
+        }
+        ReleaseOnExit releaseMMDeviceCollection(pMMDeviceCollection);
+
+        UINT count;
+        hr = pMMDeviceCollection->GetCount(&count);
+        if (FAILED(hr)) {
+            ERR(L"IMMDeviceCollection::GetCount failed: hr = 0x%08x", hr);
+            return hr;
+        }
+
+        for (UINT i = 0; i < count; i++) {
+            IMMDevice* pMMDevice;
+
+            // get the "n"th device
+            hr = pMMDeviceCollection->Item(i, &pMMDevice);
+            if (FAILED(hr)) {
+                ERR(L"IMMDeviceCollection::Item failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            ReleaseOnExit releaseMMDevice(pMMDevice);
+
+            // open the property store on that device
+            IPropertyStore* pPropertyStore;
+            hr = pMMDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
+            if (FAILED(hr)) {
+                ERR(L"IMMDevice::OpenPropertyStore failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            ReleaseOnExit releasePropertyStore(pPropertyStore);
+
+            // get the long name property
+            PROPVARIANT pv; PropVariantInit(&pv);
+            hr = pPropertyStore->GetValue(PKEY_Device_FriendlyName, &pv);
+            if (FAILED(hr)) {
+                ERR(L"IPropertyStore::GetValue failed: hr = 0x%08x", hr);
+                return hr;
+            }
+            PropVariantClearOnExit clearPv(&pv);
+
+            if (VT_LPWSTR != pv.vt) {
+                ERR(L"PKEY_Device_FriendlyName variant type is %u - expected VT_LPWSTR", pv.vt);
+                return E_UNEXPECTED;
+            }
+
+            // is it a match?
+            if (0 == _wcsicmp(pv.pwszVal, szLongName)) {
+                // did we already find it?
+                if (NULL == *ppMMDevice) {
+                    *ppMMDevice = pMMDevice;
+                    pMMDevice->AddRef();
+                }
+                else {
+                    ERR(L"Found (at least) two devices named %ls", szLongName);
+                    return E_UNEXPECTED;
+                }
+            }
+        }
+
+        if (NULL == *ppMMDevice) {
+            ERR(L"Could not find a device named %ls", szLongName);
+            return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+        }
+
+        return S_OK;
+    }
+
+
     void WriteBuffer(byte* bytes, int numBytes)
     {
         for (int i = 0; i < numBytes; i++)
         {
-            int writePos = (currentWritePos + i) & (bufferSize - 1);
-            bigBuffer[writePos] = bytes[i];
+            int writePos = (globalCurrentWritePos + i) & (globalBufferSize - 1);
+            globalBigBuffer[writePos] = bytes[i];
         }
-        currentWritePos = (currentWritePos + numBytes) & (bufferSize - 1);
+        globalCurrentWritePos = (globalCurrentWritePos + numBytes) & (globalBufferSize - 1);
     }
 
     void ReadData(byte* data, int numBytes)
     {
-        int startPos = (currentWritePos + bufferSize - numBytes) & (bufferSize - 1);
+        int startPos = (globalCurrentWritePos + globalBufferSize - numBytes) & (globalBufferSize - 1);
         for (int i = 0; i < numBytes; i++)
         {
-            int readPos = (startPos + i) & (bufferSize - 1);
-            data[i] = bigBuffer[readPos];
+            int readPos = (startPos + i) & (globalBufferSize - 1);
+            data[i] = globalBigBuffer[readPos];
         }
     }
 
@@ -57,119 +286,123 @@ namespace AudioCapture
 
     BSTR GetDeviceName(int index)
     {
-        return ::SysAllocString(Helpers::devices[index].c_str());
+        return ::SysAllocString(globalDeviceList[index].c_str());
     }
 
     int GetNumDevices()
     {
-        return (int)Helpers::devices.size();
+        return (int)globalDeviceList.size();
     }
 
     BSTR GetSelectedDeviceName()
     {
         LPWSTR id;
-        threadArgs.pMMDevice->GetId(&id);
+        globalThreadArgs.pMMDevice->GetId(&id);
         return ::SysAllocString(id);
     }
 
     int Init(BSTR deviceName)
     {
-        errorCondition = false;
+        globalDone = false;
+        globalFinished = false;
+        globalErrorCondition = false;
         HRESULT hr = S_OK;
         hr = CoInitialize(NULL);
         if (FAILED(hr)) {
             ERR(L"CoInitialize failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return -__LINE__;
         }
 
         // create a "loopback capture has started" event
-        hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (NULL == hStartedEvent) {
+        globalHStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (NULL == globalHStartedEvent) {
             ERR(L"CreateEvent failed: last error is %u", GetLastError());
+            globalErrorCondition = true;
+            globalFinished = true;
             return -__LINE__;
         }
-        CloseHandleOnExit closeStartedEvent(hStartedEvent);
+        CloseHandleOnExit closeStartedEvent(globalHStartedEvent);
 
-        // create a "stop capturing now" event
-        HANDLE hStopEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (NULL == hStopEvent) {
-            ERR(L"CreateEvent failed: last error is %u", GetLastError());
-            return -__LINE__;
+        hr = CoCreateInstance(
+            __uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL,
+            __uuidof(IMMDeviceEnumerator),
+            (void**)&globalMMDeviceEnumerator
+        );
+        if (FAILED(hr)) {
+            ERR(L"CoCreateInstance(IMMDeviceEnumerator) failed: hr = 0x%08x", hr);
+            return hr;
         }
-        CloseHandleOnExit closeStopEvent(hStopEvent);
 
         // create arguments for loopback capture thread
-        threadArgs.hr = E_UNEXPECTED; // thread will overwrite this
-        HRESULT res = Helpers::get_specific_device(deviceName, &threadArgs.pMMDevice);
+        globalThreadArgs.hr = E_UNEXPECTED; // thread will overwrite this
+        HRESULT res = get_specific_device(deviceName, &globalThreadArgs.pMMDevice);
 
         if (res != S_OK)
         {
-            res = Helpers::get_default_device(&threadArgs.pMMDevice);
+            res = get_default_device(&globalThreadArgs.pMMDevice);
             if (res != S_OK)
             {
+                globalErrorCondition = true;
+                globalFinished = true;
                 return -__LINE__;
             }
         }
 
-        threadArgs.bInt16 = true;
-        threadArgs.hStartedEvent = hStartedEvent;
-        threadArgs.hStopEvent = hStopEvent;
-        threadArgs.nFrames = 0;
+        globalThreadArgs.bInt16 = true;
+        globalThreadArgs.hStartedEvent = globalHStartedEvent;
+        globalThreadArgs.nFrames = 0;
 
-        hThread = CreateThread(
+        globalHThread = CreateThread(
             NULL, 0,
-            LoopbackCaptureThreadFunction, &threadArgs,
+            LoopbackCaptureThreadFunction, &globalThreadArgs,
             0, NULL
         );
-        if (NULL == hThread) {
+        if (NULL == globalHThread) {
             ERR(L"CreateThread failed: last error is %u", GetLastError());
+            globalErrorCondition = true;
+            globalFinished = true;
             return -__LINE__;
         }
 
-        Helpers::list_devices();
+        globalMMDeviceEnumerator->RegisterEndpointNotificationCallback(&globalMMNotificationClient);
+        
+        list_devices();
 
         return 0;
     }
 
     int Shutdown()
     {
-        if (!CloseHandle(hThread)) {
-            ERR(L"CloseHandle failed: last error is %d", GetLastError());
-        }
+        globalDone = true;
+        while (!globalFinished);
 
-        // wait for either capture to start or the thread to end
-        HANDLE waitArray[2] = { hStartedEvent, hThread };
-        DWORD dwWaitResult;
-        dwWaitResult = WaitForMultipleObjects(
-            ARRAYSIZE(waitArray), waitArray,
-            FALSE, INFINITE
-        );
+        globalDone = false;
+        globalFinished = false;
+        globalErrorCondition = false;
 
-        if (WAIT_OBJECT_0 + 1 == dwWaitResult) {
-            ERR(L"Thread aborted before starting to loopback capture: hr = 0x%08x", threadArgs.hr);
-            return -__LINE__;
-        }
-
-        if (WAIT_OBJECT_0 != dwWaitResult) {
-            ERR(L"Unexpected WaitForMultipleObjects return value %u", dwWaitResult);
-            return -__LINE__;
-        }
-
+        globalMMDeviceEnumerator->UnregisterEndpointNotificationCallback(&globalMMNotificationClient);
+        globalMMDeviceEnumerator->Release();
 
         DWORD exitCode;
-        if (!GetExitCodeThread(hThread, &exitCode)) {
+        if (!GetExitCodeThread(globalHThread, &exitCode)) {
             ERR(L"GetExitCodeThread failed: last error is %u", GetLastError());
             return -__LINE__;
         }
 
-        if (0 != exitCode) {
-            ERR(L"Loopback capture thread exit code is %u; expected 0", exitCode);
-            return -__LINE__;
+        if (!CloseHandle(globalHThread)) {
+            ERR(L"CloseHandle failed: last error is %d", GetLastError());
         }
 
-        if (S_OK != threadArgs.hr) {
-            ERR(L"Thread HRESULT is 0x%08x", threadArgs.hr);
-            return -__LINE__;
+        if (0 != exitCode) {
+            ERR(L"Loopback capture thread exit code is %u; expected 0", exitCode);
+            //return -__LINE__;
+        }
+
+        if (S_OK != globalThreadArgs.hr) {
+            ERR(L"Thread HRESULT is 0x%08x", globalThreadArgs.hr);
+            //return -__LINE__;
         }
 
         CoUninitialize();
@@ -179,14 +412,13 @@ namespace AudioCapture
 
     int GetNumChannels()
     {
-        return pwfx == nullptr ? 0 : pwfx->nChannels;
+        return globalPwfx == nullptr ? 0 : globalPwfx->nChannels;
     }
 
     bool HasError()
     {
-        return errorCondition;
+        return globalErrorCondition;
     }
-
 
     DWORD WINAPI LoopbackCaptureThreadFunction(LPVOID pContext) {
         LoopbackCaptureThreadFunctionArguments* pArgs =
@@ -195,6 +427,8 @@ namespace AudioCapture
         pArgs->hr = CoInitialize(NULL);
         if (FAILED(pArgs->hr)) {
             ERR(L"CoInitialize failed: hr = 0x%08x", pArgs->hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return 0;
         }
         CoUninitializeOnExit cuoe;
@@ -203,10 +437,11 @@ namespace AudioCapture
             pArgs->pMMDevice,
             pArgs->bInt16,
             pArgs->hStartedEvent,
-            pArgs->hStopEvent,
             &pArgs->nFrames
         );
 
+        globalErrorCondition = true;
+        globalFinished = true;
         return 0;
     }
 
@@ -214,7 +449,6 @@ namespace AudioCapture
         IMMDevice* pMMDevice,
         bool bInt16,
         HANDLE hStartedEvent,
-        HANDLE hStopEvent,
         PUINT32 pnFrames
     ) {
         HRESULT hr;
@@ -228,6 +462,8 @@ namespace AudioCapture
         );
         if (FAILED(hr)) {
             ERR(L"IMMDevice::Activate(IAudioClient) failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
         ReleaseOnExit releaseAudioClient(pAudioClient);
@@ -237,49 +473,57 @@ namespace AudioCapture
         hr = pAudioClient->GetDevicePeriod(&hnsDefaultDevicePeriod, NULL);
         if (FAILED(hr)) {
             ERR(L"IAudioClient::GetDevicePeriod failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
 
         // get the default device format
-        hr = pAudioClient->GetMixFormat(&pwfx);
+        hr = pAudioClient->GetMixFormat(&globalPwfx);
         if (FAILED(hr)) {
             ERR(L"IAudioClient::GetMixFormat failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
-        CoTaskMemFreeOnExit freeMixFormat(pwfx);
+        CoTaskMemFreeOnExit freeMixFormat(globalPwfx);
 
         if (bInt16) {
             // coerce int-16 wave format
             // can do this in-place since we're not changing the size of the format
             // also, the engine will auto-convert from float to int for us
-            switch (pwfx->wFormatTag) {
+            switch (globalPwfx->wFormatTag) {
             case WAVE_FORMAT_IEEE_FLOAT:
-                pwfx->wFormatTag = WAVE_FORMAT_PCM;
-                pwfx->wBitsPerSample = 16;
-                pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
-                pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
+                globalPwfx->wFormatTag = WAVE_FORMAT_PCM;
+                globalPwfx->wBitsPerSample = 16;
+                globalPwfx->nBlockAlign = globalPwfx->nChannels * globalPwfx->wBitsPerSample / 8;
+                globalPwfx->nAvgBytesPerSec = globalPwfx->nBlockAlign * globalPwfx->nSamplesPerSec;
                 break;
 
             case WAVE_FORMAT_EXTENSIBLE:
             {
                 // naked scope for case-local variable
-                PWAVEFORMATEXTENSIBLE pEx = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(pwfx);
+                PWAVEFORMATEXTENSIBLE pEx = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(globalPwfx);
                 if (IsEqualGUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, pEx->SubFormat)) {
                     pEx->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
                     pEx->Samples.wValidBitsPerSample = 16;
-                    pwfx->wBitsPerSample = 16;
-                    pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
-                    pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
+                    globalPwfx->wBitsPerSample = 16;
+                    globalPwfx->nBlockAlign = globalPwfx->nChannels * globalPwfx->wBitsPerSample / 8;
+                    globalPwfx->nAvgBytesPerSec = globalPwfx->nBlockAlign * globalPwfx->nSamplesPerSec;
                 }
                 else {
                     ERR(L"%s", L"Don't know how to coerce mix format to int-16");
+                    globalErrorCondition = true;
+                    globalFinished = true;
                     return E_UNEXPECTED;
                 }
             }
             break;
 
             default:
-                ERR(L"Don't know how to coerce WAVEFORMATEX with wFormatTag = 0x%08x to int-16", pwfx->wFormatTag);
+                ERR(L"Don't know how to coerce WAVEFORMATEX with wFormatTag = 0x%08x to int-16", globalPwfx->wFormatTag);
+                globalErrorCondition = true;
+                globalFinished = true;
                 return E_UNEXPECTED;
             }
         }
@@ -297,11 +541,13 @@ namespace AudioCapture
         if (NULL == hWakeUp) {
             DWORD dwErr = GetLastError();
             ERR(L"CreateWaitableTimer failed: last error = %u", dwErr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return HRESULT_FROM_WIN32(dwErr);
         }
         CloseHandleOnExit closeWakeUp(hWakeUp);
 
-        UINT32 nBlockAlign = pwfx->nBlockAlign;
+        UINT32 nBlockAlign = globalPwfx->nBlockAlign;
         *pnFrames = 0;
 
         // call IAudioClient::Initialize
@@ -312,12 +558,26 @@ namespace AudioCapture
         hr = pAudioClient->Initialize(
             AUDCLNT_SHAREMODE_SHARED,
             AUDCLNT_STREAMFLAGS_LOOPBACK,
-            0, 0, pwfx, 0
+            0, 0, globalPwfx, 0
         );
         if (FAILED(hr)) {
             ERR(L"IAudioClient::Initialize failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
+
+        ISimpleAudioVolume* pStreamVolume = nullptr;
+        hr = pAudioClient->GetService(__uuidof(ISimpleAudioVolume), (void**)&pStreamVolume);
+        ReleaseOnExit releaseVolumeClient(pStreamVolume);
+        if (FAILED(hr)) {
+            ERR(L"GetService ISimpleAudioVolume failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
+            return hr;
+        }
+
+        pStreamVolume->SetMasterVolume(1.0f, nullptr);
 
         // activate an IAudioCaptureClient
         IAudioCaptureClient* pAudioCaptureClient;
@@ -327,6 +587,8 @@ namespace AudioCapture
         );
         if (FAILED(hr)) {
             ERR(L"IAudioClient::GetService(IAudioCaptureClient) failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
         ReleaseOnExit releaseAudioCaptureClient(pAudioCaptureClient);
@@ -337,6 +599,8 @@ namespace AudioCapture
         if (NULL == hTask) {
             DWORD dwErr = GetLastError();
             ERR(L"AvSetMmThreadCharacteristics failed: last error = %u", dwErr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return HRESULT_FROM_WIN32(dwErr);
         }
         AvRevertMmThreadCharacteristicsOnExit unregisterMmcss(hTask);
@@ -354,6 +618,8 @@ namespace AudioCapture
         if (!bOK) {
             DWORD dwErr = GetLastError();
             ERR(L"SetWaitableTimer failed: last error = %u", dwErr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return HRESULT_FROM_WIN32(dwErr);
         }
         CancelWaitableTimerOnExit cancelWakeUp(hWakeUp);
@@ -362,6 +628,8 @@ namespace AudioCapture
         hr = pAudioClient->Start();
         if (FAILED(hr)) {
             ERR(L"IAudioClient::Start failed: hr = 0x%08x", hr);
+            globalErrorCondition = true;
+            globalFinished = true;
             return hr;
         }
         AudioClientStopOnExit stopAudioClient(pAudioClient);
@@ -369,12 +637,8 @@ namespace AudioCapture
         SetEvent(hStartedEvent);
 
         // loopback capture loop
-        HANDLE waitArray[2] = { hStopEvent, hWakeUp };
-        DWORD dwWaitResult;
-
-        bool bDone = false;
         bool bFirstPacket = true;
-        for (UINT32 nPasses = 0; !bDone; nPasses++) {
+        for (UINT32 nPasses = 0; !globalDone; nPasses++) {
             // drain data while it is available
             UINT32 nNextPacketSize;
             for (
@@ -396,7 +660,9 @@ namespace AudioCapture
                 );
                 if (FAILED(hr)) {
                     ERR(L"IAudioCaptureClient::GetBuffer failed on pass %u after %u frames: hr = 0x%08x", nPasses, *pnFrames, hr);
-                    errorCondition = true;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+                    globalErrorCondition = true;
+                    globalFinished = true;
                     return hr;
                 }
 
@@ -405,13 +671,17 @@ namespace AudioCapture
                 }
                 else if (0 != dwFlags) {
                     LOG(L"IAudioCaptureClient::GetBuffer set flags to 0x%08x on pass %u after %u frames", dwFlags, nPasses, *pnFrames);
-                    errorCondition = true;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+                    globalErrorCondition = true;
+                    globalFinished = true;
                     return E_UNEXPECTED;
                 }
 
                 if (0 == nNumFramesToRead) {
                     ERR(L"IAudioCaptureClient::GetBuffer said to read 0 frames on pass %u after %u frames", nPasses, *pnFrames);
-                    errorCondition = true;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+                    globalErrorCondition = true;
+                    globalFinished = true;
                     return E_UNEXPECTED;
                 }
 
@@ -428,28 +698,23 @@ namespace AudioCapture
                 hr = pAudioCaptureClient->ReleaseBuffer(nNumFramesToRead);
                 if (FAILED(hr)) {
                     ERR(L"IAudioCaptureClient::ReleaseBuffer failed on pass %u after %u frames: hr = 0x%08x", nPasses, *pnFrames, hr);
-                    errorCondition = true;
+                    std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+                    globalErrorCondition = true;
+                    globalFinished = true;
                     return hr;
                 }
 
                 bFirstPacket = false;
             }
 
-            if (FAILED(hr)) {
+            if (FAILED(hr) && bFirstPacket == false) {
                 ERR(L"IAudioCaptureClient::GetNextPacketSize failed on pass %u after %u frames: hr = 0x%08x", nPasses, *pnFrames, hr);
+                std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime));
+                globalErrorCondition = true;
+                globalFinished = true;
                 return hr;
             }
 
-            dwWaitResult = WaitForMultipleObjects(
-                ARRAYSIZE(waitArray), waitArray,
-                FALSE, INFINITE
-            );
-
-//             if (WAIT_OBJECT_0 == dwWaitResult) {
-//                 LOG(L"Received stop event after %u passes and %u frames", nPasses, *pnFrames);
-//                 bDone = true;
-//                 continue; // exits loop
-//             }
 // 
 //             if (WAIT_OBJECT_0 + 1 != dwWaitResult) {
 //                 ERR(L"Unexpected WaitForMultipleObjects return value %u on pass %u after %u frames", dwWaitResult, nPasses, *pnFrames);
@@ -463,6 +728,9 @@ namespace AudioCapture
     //         return hr;
     //     }
     //     
+        std::this_thread::sleep_for(std::chrono::milliseconds(globalSleepTime)); 
+        globalErrorCondition = true;
+        globalFinished = true;
         return hr;
     }
 

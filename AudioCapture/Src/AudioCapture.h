@@ -22,7 +22,6 @@ namespace AudioCapture
         IMMDevice* pMMDevice,
         bool bInt16,
         HANDLE hStartedEvent,
-        HANDLE hStopEvent,
         PUINT32 pnFrames
     );
 };

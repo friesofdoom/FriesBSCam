@@ -97,7 +97,7 @@ namespace AudioLink.Scripts
         private bool _ignoreRightChannel;
 
         private string _device = "";
-        public AudioLink(GameObject gameObject)
+        public AudioLink()
         {
 
             string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -110,7 +110,7 @@ namespace AudioLink.Scripts
                 // Create a default settings file.
                 using (var ws = new StreamWriter(@settingLoc))
                 {
-                    ws.WriteLine("Volume='50.0'");
+                    ws.WriteLine("Volume='5.0'");
                     ws.WriteLine("Device=''");
                 }
             }
@@ -310,8 +310,12 @@ namespace AudioLink.Scripts
         {
             if (FriesBSCameraPlugin.AudioCapture.HasError())
             {
+                MyCameraPlugin.Log("Restarting Audio Capture after error");
                 FriesBSCameraPlugin.AudioCapture.Shutdown();
                 FriesBSCameraPlugin.AudioCapture.Init(_device);
+                var selectedDevice = FriesBSCameraPlugin.AudioCapture.GetSelectedDeviceName();
+                MyCameraPlugin.Log("    Selected Device: " + selectedDevice);
+                MyCameraPlugin.Log("Done");
             }
             FriesBSCameraPlugin.AudioCapture.ReadData(_rawData, _rawData.Length);
 
@@ -366,13 +370,12 @@ namespace AudioLink.Scripts
             //                 _ignoreRightChannel = _audioFramesR[0] == 0f;
             //             }
 
-            //float a = 0;
-            //foreach (var b in _samples) a += b * b;
-            //if (_record.LeftSamples != null)
-            //{
-            //    MyCameraPlugin.Log("num samples: " + _record.LeftSamples.Length);
-            //}
             GetSamples();
+//             foreach (var b in _audioFramesL)
+//             {
+//                 MyCameraPlugin.Log(b.ToString());
+//             }
+            //MyCameraPlugin.Log("Volume: " + FriesBSCameraPlugin.AudioCapture.GetVolume());
 
             Array.Copy(_audioFramesL, 0, _samples, 0, 1023); // 4092 - 1023 * 4
             _audioMaterial.SetFloatArray(_samples0L, _samples);
