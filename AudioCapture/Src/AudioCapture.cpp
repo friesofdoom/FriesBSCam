@@ -17,6 +17,7 @@ namespace AudioCapture
     HANDLE hStartedEvent;
     LoopbackCaptureThreadFunctionArguments threadArgs;
     WAVEFORMATEX* pwfx;
+    bool errorCondition = false;
 
     const int bufferSize = 1 * 1024 * 1024; // Must be power of 2
     int currentWritePos = 0;
@@ -73,6 +74,7 @@ namespace AudioCapture
 
     int Init(BSTR deviceName)
     {
+        errorCondition = false;
         HRESULT hr = S_OK;
         hr = CoInitialize(NULL);
         if (FAILED(hr)) {
@@ -178,6 +180,11 @@ namespace AudioCapture
     int GetNumChannels()
     {
         return pwfx == nullptr ? 0 : pwfx->nChannels;
+    }
+
+    bool HasError()
+    {
+        return errorCondition;
     }
 
 
@@ -389,6 +396,7 @@ namespace AudioCapture
                 );
                 if (FAILED(hr)) {
                     ERR(L"IAudioCaptureClient::GetBuffer failed on pass %u after %u frames: hr = 0x%08x", nPasses, *pnFrames, hr);
+                    errorCondition = true;
                     return hr;
                 }
 
@@ -397,11 +405,13 @@ namespace AudioCapture
                 }
                 else if (0 != dwFlags) {
                     LOG(L"IAudioCaptureClient::GetBuffer set flags to 0x%08x on pass %u after %u frames", dwFlags, nPasses, *pnFrames);
+                    errorCondition = true;
                     return E_UNEXPECTED;
                 }
 
                 if (0 == nNumFramesToRead) {
                     ERR(L"IAudioCaptureClient::GetBuffer said to read 0 frames on pass %u after %u frames", nPasses, *pnFrames);
+                    errorCondition = true;
                     return E_UNEXPECTED;
                 }
 
@@ -418,6 +428,7 @@ namespace AudioCapture
                 hr = pAudioCaptureClient->ReleaseBuffer(nNumFramesToRead);
                 if (FAILED(hr)) {
                     ERR(L"IAudioCaptureClient::ReleaseBuffer failed on pass %u after %u frames: hr = 0x%08x", nPasses, *pnFrames, hr);
+                    errorCondition = true;
                     return hr;
                 }
 

@@ -13,6 +13,9 @@ namespace AudioLink.Assets
 
         internal static void LoadFromMemoryAsync()
         {
+            if (Material != null)
+                return;
+
             byte[] bytes;
 
            //var names = typeof(AssetBundleManager).Assembly.GetManifestResourceNames();

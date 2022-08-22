@@ -90,6 +90,7 @@ public class CameraData
 public static class CameraPluginSettings
 {
     public static float GlobalBias;
+    public static float FOV;
     public static bool SongSpecific;
     public static bool Debug = false;
 //    public static float BlendSpeed;
@@ -112,6 +113,7 @@ public static class CameraPluginSettings
             // Create a default settings file.
             using (var ws = new StreamWriter(@settingLoc))
             {
+                ws.WriteLine("FOV='60.0'");
                 ws.WriteLine("GlobalBias='0.0'");
                 ws.WriteLine("MenuCamera={");
                 ws.WriteLine("	Name='MenuCamera'");
@@ -258,6 +260,7 @@ public static class CameraPluginSettings
         parser.Tokenize(readText);
 
         GlobalBias = ParseFloat(root.GetChildSafe("GlobalBias"));
+        FOV = ParseFloat(root.GetChildSafe("FOV"), 60.0f);
         Debug = ParseBool(root.GetChildSafe("Debug"));
         //        BlendSpeed = ParseFloat(root.GetChildSafe("BlendSpeed"));
 
@@ -324,7 +327,7 @@ public static class CameraPluginSettings
         return false;
     }
 
-    public static float ParseFloat(ReflectionToken token)
+    public static float ParseFloat(ReflectionToken token, float def = 0.0f)
     {
         float outFloat = 0.0f;
         if (float.TryParse(token.mValue, out outFloat))
@@ -332,7 +335,7 @@ public static class CameraPluginSettings
             return outFloat;
         }
 
-        return 0.0f;
+        return def;
     }
 
     public static OrbitalDirection GetOrbitalDirectionFromToken(ReflectionToken token)

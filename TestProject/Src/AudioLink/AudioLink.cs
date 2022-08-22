@@ -96,8 +96,7 @@ namespace AudioLink.Scripts
         private int _rightChannelTestCounter;
         private bool _ignoreRightChannel;
 
-        MyAudioRecorder_PlayerwMixer.clsRecord _record;
-        MyAudioRecorder_PlayerwMixer.clsWinMMBase.WAVEFORMATEX _wavFmt;
+        private string _device = "";
         public AudioLink(GameObject gameObject)
         {
 
@@ -125,14 +124,14 @@ namespace AudioLink.Scripts
             parser.Tokenize(readText);
 
             _volume = CameraPluginSettings.ParseFloat(root.GetChildSafe("Volume"));
-            string device = root.GetChildSafe("Device").mValue;
+            _device = root.GetChildSafe("Device").mValue;
 
             MyCameraPlugin.Log("AudioLink Startup");
             MyCameraPlugin.Log("Loading Asset Bundle from Memory");
             AssetBundleManager.LoadFromMemoryAsync();
 
             MyCameraPlugin.Log("Starting Audio Capture");
-            var result = FriesBSCameraPlugin.AudioCapture.Init(device);
+            var result = FriesBSCameraPlugin.AudioCapture.Init(_device);
             if (result == 0)
                 MyCameraPlugin.Log("Done");
             else
@@ -142,7 +141,7 @@ namespace AudioLink.Scripts
             MyCameraPlugin.Log("Device List: " + numDevices);
             for (int i = 0; i < numDevices; i++)
             {
-                device = FriesBSCameraPlugin.AudioCapture.GetDeviceName(i);
+                var device = FriesBSCameraPlugin.AudioCapture.GetDeviceName(i);
                 MyCameraPlugin.Log("    " + device);
             }
 
@@ -154,21 +153,6 @@ namespace AudioLink.Scripts
             MyCameraPlugin.Log("Num Channels: " + _numChannels);
 
             MyCameraPlugin.Log("Done");
-
-            _wavFmt = new MyAudioRecorder_PlayerwMixer.clsWinMMBase.WAVEFORMATEX();
-            _wavFmt.wFormatTag = 1;//pcm
-            _wavFmt.nChannels = 2;//stereo
-            _wavFmt.nSamplesPerSec = 44100;//44100 samples per sec
-            _wavFmt.nAvgBytesPerSec = 176400;//2 channels*2 bytes * 44100 samples 
-            _wavFmt.wBitsPerSample = 16;//16 bits per sample
-            _wavFmt.nBlockAlign = (ushort)(_wavFmt.nChannels * _wavFmt.wBitsPerSample / 8);
-            _wavFmt.cbSize = (ushort)System.Runtime.InteropServices.Marshal.SizeOf(_wavFmt);
-
-            _record = new MyAudioRecorder_PlayerwMixer.clsRecord(_wavFmt);
-            if (_record.StartRecording(2) == true)
-                MyCameraPlugin.Log("StartRecording!");
-            else
-                MyCameraPlugin.Log("StartRecording failed!");
 
             _customThemeColor0 = Color.red;
             _customThemeColor1 = Color.green;
@@ -244,7 +228,7 @@ namespace AudioLink.Scripts
             //    Casting and encoding as UInt32 as 2 floats, to prevent aliasing, twice: 5.1ms / 255
             //    Casting and encoding as UInt32 as 2 floats, to prevent aliasing, once: 3.2ms / 255
             // ReSharper disable once InvertIf
-            if (_record != null)
+            //if (_record != null)
             {
                 SendAudioOutputData();
 
@@ -324,6 +308,11 @@ namespace AudioLink.Scripts
 
         private bool GetSamples()
         {
+            if (FriesBSCameraPlugin.AudioCapture.HasError())
+            {
+                FriesBSCameraPlugin.AudioCapture.Shutdown();
+                FriesBSCameraPlugin.AudioCapture.Init(_device);
+            }
             FriesBSCameraPlugin.AudioCapture.ReadData(_rawData, _rawData.Length);
 
             bool rv = false;

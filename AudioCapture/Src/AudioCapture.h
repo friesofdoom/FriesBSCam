@@ -9,6 +9,7 @@ namespace AudioCapture
         __declspec(dllexport) int Init(BSTR deviceName);
         __declspec(dllexport) int Shutdown();
         __declspec(dllexport) int GetNumChannels();
+        __declspec(dllexport) bool HasError();
         __declspec(dllexport) void ReadData(byte* data, int numBytes);
         __declspec(dllexport) BSTR GetSelectedDeviceName();
         __declspec(dllexport) BSTR GetDeviceName(int index);

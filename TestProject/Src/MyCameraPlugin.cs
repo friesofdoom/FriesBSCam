@@ -114,9 +114,12 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
         Log("Startup");
 
-        Log("Starting AudioLink");
-        _audioLink = new AudioLink.Scripts.AudioLink(helper.behaviour.manager.camera.gameObject);
-        Log("AudioLink Started");
+        if (_audioLink == null)
+        {
+            Log("Starting AudioLink");
+            _audioLink = new AudioLink.Scripts.AudioLink(helper.behaviour.manager.camera.gameObject);
+            Log("AudioLink Started");
+        }
 
         Log("Loading Settings");
         CameraPluginSettings.LoadSettings();
@@ -127,7 +130,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
         beatSaberStatus = new BeatSaberStatus();
 
-        _helper.UpdateFov(60.0f);
+        Log("FOV: " + CameraPluginSettings.FOV);
+        _helper.UpdateFov(CameraPluginSettings.FOV);
         UpdateCameraChange();
 
     }
