@@ -366,10 +366,10 @@ namespace AudioLink.Scripts
             //             }
 
             GetSamples();
-            foreach (var b in _audioFramesL)
-            {
-                Logger.Log(b.ToString());
-            }
+//             foreach (var b in _audioFramesL)
+//             {
+//                 Logger.Log(b.ToString());
+//             }
             //Logger.Log("Volume: " + FriesBSCameraPlugin.AudioCapture.GetVolume());
 
             Array.Copy(_audioFramesL, 0, _samples, 0, 1023); // 4092 - 1023 * 4

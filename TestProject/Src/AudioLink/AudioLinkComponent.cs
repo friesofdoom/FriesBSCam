@@ -21,4 +21,9 @@ public class AudioLinkComponent : MonoBehaviour
     {
         _audioLink?.Tick();
     }
+
+    void OnDisable()
+    {
+        Logger.Close();
+    }
 }

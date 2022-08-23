@@ -355,7 +355,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         beatSaberStatus.shutDown();
         _helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
         Logger.Log("Camera Deactivate Done.");
-        //Logger.Close();
+        Logger.Close();
     }
 
     // OnDestroy is called when the users selects a camera behaviour which is not a plugin or when the application is about to close.

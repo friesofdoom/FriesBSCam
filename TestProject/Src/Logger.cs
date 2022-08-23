@@ -37,4 +37,10 @@ public static class Logger
         logStream?.Flush();
     }
 
+    public static void Close()
+    {
+        logStream?.Close();
+        logStream = null;
+    }
+
 }
