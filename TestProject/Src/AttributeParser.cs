@@ -9,6 +9,31 @@ public enum eReflectionTokenType
     INVALID, OPEN_BRACE, CLOSE_BRACE, IGNORED, INVERTED_COMMA, IDENT, EQUAL, STRING
 };
 
+public static class AttrExten
+{
+    public static float ParseFloat(this ReflectionToken token, float def = 0.0f)
+    {
+        float outFloat = 0.0f;
+        if (float.TryParse(token.mValue, out outFloat))
+        {
+            return outFloat;
+        }
+
+        return def;
+    }
+
+    public static bool ParseBool(this ReflectionToken token, bool def = false)
+    {
+        bool outBool = false;
+        if (bool.TryParse(token.mValue, out outBool))
+        {
+            return outBool;
+        }
+
+        return def;
+    }
+}
+
 public class ReflectionToken
 {
     public eReflectionTokenType mTokenType;

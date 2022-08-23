@@ -19,10 +19,10 @@ namespace AudioLink.Assets
             byte[] bytes;
 
            //var names = typeof(AssetBundleManager).Assembly.GetManifestResourceNames();
-           //MyCameraPlugin.Log("Names: ");
+           //Logger.Log("Names: ");
            //foreach (var name in names)
            //{
-           //    MyCameraPlugin.Log(name);
+           //    Logger.Log(name);
            //}
 
             using (Stream stream = typeof(AssetBundleManager).Assembly.GetManifestResourceStream(PATH)!)
@@ -36,9 +36,9 @@ namespace AudioLink.Assets
             Material = bundle.LoadAsset<Material>("assets/audioLink/materials/mat_audiolink.mat");
             RenderTexture = bundle.LoadAsset<RenderTexture>("assets/audiolink/rendertextures/rt_audiolink.asset");
 
-            MyCameraPlugin.Log("Created Assets:" );
-            MyCameraPlugin.Log("   " + Material.name);
-            MyCameraPlugin.Log("   " + RenderTexture.name);
+            Logger.Log("Created Assets:" );
+            Logger.Log("   " + Material.name);
+            Logger.Log("   " + RenderTexture.name);
         }
     }
 }

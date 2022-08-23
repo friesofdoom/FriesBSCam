@@ -259,9 +259,9 @@ public static class CameraPluginSettings
         AttributeParser parser = new AttributeParser(root);
         parser.Tokenize(readText);
 
-        GlobalBias = ParseFloat(root.GetChildSafe("GlobalBias"));
-        FOV = ParseFloat(root.GetChildSafe("FOV"), 60.0f);
-        Debug = ParseBool(root.GetChildSafe("Debug"));
+        GlobalBias = root.GetChildSafe("GlobalBias").ParseFloat();
+        FOV = root.GetChildSafe("FOV").ParseFloat(60.0f);
+        Debug = root.GetChildSafe("Debug").ParseBool();
         //        BlendSpeed = ParseFloat(root.GetChildSafe("BlendSpeed"));
 
         // Adding support for a custom MenuCamera if it exists
@@ -302,40 +302,17 @@ public static class CameraPluginSettings
         outCamera.LookAt = GetVector3Token(camera.GetChildSafe("LookAt"));
         outCamera.PositionBinding = camera.GetChildSafe("PositionBinding").mValue;
         outCamera.LookAtBinding = camera.GetChildSafe("LookAtBinding").mValue;
-        outCamera.Distance = ParseFloat(camera.GetChildSafe("Distance"));
-        outCamera.Speed = ParseFloat(camera.GetChildSafe("Speed"));
-        outCamera.MinTime = ParseFloat(camera.GetChildSafe("MinTime"));
-        outCamera.MaxTime = ParseFloat(camera.GetChildSafe("MaxTime"));
-        outCamera.ActualTime = ParseFloat(camera.GetChildSafe("ActualTime"));
-        outCamera.TransitionTime = ParseFloat(camera.GetChildSafe("TransitionTime"));
+        outCamera.Distance = camera.GetChildSafe("Distance").ParseFloat();
+        outCamera.Speed = camera.GetChildSafe("Speed").ParseFloat();
+        outCamera.MinTime = camera.GetChildSafe("MinTime").ParseFloat();
+        outCamera.MaxTime = camera.GetChildSafe("MaxTime").ParseFloat();
+        outCamera.ActualTime = camera.GetChildSafe("ActualTime").ParseFloat();
+        outCamera.TransitionTime = camera.GetChildSafe("TransitionTime").ParseFloat();
         outCamera.TransitionCurve = GetTransitionCurveFromToken(camera.GetChildSafe("TransitionCurve"));
-        outCamera.ReleaseBehindPlayer = ParseBool(camera.GetChildSafe("ReleaseBehindPlayer"));
+        outCamera.ReleaseBehindPlayer = camera.GetChildSafe("ReleaseBehindPlayer").ParseBool();
         outCamera.Direction = GetOrbitalDirectionFromToken(camera.GetChildSafe("Direction"));
 
         return outCamera;
-    }
-
-
-    public static bool ParseBool(ReflectionToken token)
-    {
-        bool outBool = false;
-        if (bool.TryParse(token.mValue, out outBool))
-        {
-            return outBool;
-        }
-
-        return false;
-    }
-
-    public static float ParseFloat(ReflectionToken token, float def = 0.0f)
-    {
-        float outFloat = 0.0f;
-        if (float.TryParse(token.mValue, out outFloat))
-        {
-            return outFloat;
-        }
-
-        return def;
     }
 
     public static OrbitalDirection GetOrbitalDirectionFromToken(ReflectionToken token)
@@ -380,9 +357,9 @@ public static class CameraPluginSettings
 
     public static Vector3 GetVector3Token(ReflectionToken token)
     {
-        float x = ParseFloat(token.GetChildSafe("x"));
-        float y = ParseFloat(token.GetChildSafe("y"));
-        float z = ParseFloat(token.GetChildSafe("z"));
+        float x = token.GetChildSafe("x").ParseFloat();
+        float y = token.GetChildSafe("y").ParseFloat();
+        float z = token.GetChildSafe("z").ParseFloat();
 
         return new Vector3(x, y, z);
     }

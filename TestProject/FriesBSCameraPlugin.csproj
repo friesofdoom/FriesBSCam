@@ -1,11 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;UnityEditor;UnityEditorDebug</Configurations>
   </PropertyGroup>
+
+
+  <ItemGroup Condition="'$(Configuration)'=='UnityEditor'">
+    <Compile Remove="Src\MyCameraPlugin.cs" />
+    <Compile Remove="Src\Camera\CameraData.cs" />
+    <Compile Remove="Src\Camera\CameraTransition.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='UnityEditorDebug'">
+    <Compile Remove="Src\MyCameraPlugin.cs" />
+    <Compile Remove="Src\Camera\CameraData.cs" />
+    <Compile Remove="Src\Camera\CameraTransition.cs" />
+  </ItemGroup>
+
+
+  <ItemGroup Condition="'$(Configuration)'=='UnityEditorDebug'">
+    <Compile Remove="Src\MyCameraPlugin.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Src\AudioLink\Bundle" />

@@ -92,14 +92,9 @@ namespace AudioLink.Scripts
         private double _fPSTime;
         private int _fPSCount;
 
-        // Fix for AVPro mono game output bug (if running the game with a mono output source like a headset)
-        private int _rightChannelTestCounter;
-        private bool _ignoreRightChannel;
-
         private string _device = "";
         public AudioLink()
         {
-
             string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string settingLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
 
@@ -123,36 +118,36 @@ namespace AudioLink.Scripts
             AttributeParser parser = new AttributeParser(root);
             parser.Tokenize(readText);
 
-            _volume = CameraPluginSettings.ParseFloat(root.GetChildSafe("Volume"));
+            _volume = root.GetChildSafe("Volume").ParseFloat();
             _device = root.GetChildSafe("Device").mValue;
 
-            MyCameraPlugin.Log("AudioLink Startup");
-            MyCameraPlugin.Log("Loading Asset Bundle from Memory");
+            Logger.Log("AudioLink Startup");
+            Logger.Log("Loading Asset Bundle from Memory");
             AssetBundleManager.LoadFromMemoryAsync();
 
-            MyCameraPlugin.Log("Starting Audio Capture");
+            Logger.Log("Starting Audio Capture");
             var result = FriesBSCameraPlugin.AudioCapture.Init(_device);
             if (result == 0)
-                MyCameraPlugin.Log("Done");
+                Logger.Log("Done");
             else
-                MyCameraPlugin.Log("Error: " + result);
+                Logger.Log("Error: " + result);
 
             var numDevices = FriesBSCameraPlugin.AudioCapture.GetNumDevices();
-            MyCameraPlugin.Log("Device List: " + numDevices);
+            Logger.Log("Device List: " + numDevices);
             for (int i = 0; i < numDevices; i++)
             {
                 var device = FriesBSCameraPlugin.AudioCapture.GetDeviceName(i);
-                MyCameraPlugin.Log("    " + device);
+                Logger.Log("    " + device);
             }
 
             var selectedDevice = FriesBSCameraPlugin.AudioCapture.GetSelectedDeviceName();
-            MyCameraPlugin.Log("Selected Device: " + selectedDevice);
+            Logger.Log("Selected Device: " + selectedDevice);
 
             _numChannels = FriesBSCameraPlugin.AudioCapture.GetNumChannels();
             _rawData = new byte[1023 * 4 * 2 * _numChannels];
-            MyCameraPlugin.Log("Num Channels: " + _numChannels);
+            Logger.Log("Num Channels: " + _numChannels);
 
-            MyCameraPlugin.Log("Done");
+            Logger.Log("Done");
 
             _customThemeColor0 = Color.red;
             _customThemeColor1 = Color.green;
@@ -162,15 +157,15 @@ namespace AudioLink.Scripts
             _audioMaterial = AssetBundleManager.Material;
             RenderTexture audioRenderTexture = AssetBundleManager.RenderTexture;
 
-            MyCameraPlugin.Log("Updating settings");
+            Logger.Log("Updating settings");
             UpdateSettings();
-            MyCameraPlugin.Log("Updating colors");
+            Logger.Log("Updating colors");
             UpdateThemeColors();
 
             Shader.SetGlobalTexture(_audioTexture, audioRenderTexture, RenderTextureSubElement.Default);
-            MyCameraPlugin.Log("AudioLink Startup Done");
-            MyCameraPlugin.Log("");
-            MyCameraPlugin.Log("");
+            Logger.Log("AudioLink Startup Done");
+            Logger.Log("");
+            Logger.Log("");
         }
 
         public void Tick()
@@ -310,12 +305,12 @@ namespace AudioLink.Scripts
         {
             if (FriesBSCameraPlugin.AudioCapture.HasError())
             {
-                MyCameraPlugin.Log("Restarting Audio Capture after error");
+                Logger.Log("Restarting Audio Capture after error");
                 FriesBSCameraPlugin.AudioCapture.Shutdown();
                 FriesBSCameraPlugin.AudioCapture.Init(_device);
                 var selectedDevice = FriesBSCameraPlugin.AudioCapture.GetSelectedDeviceName();
-                MyCameraPlugin.Log("    Selected Device: " + selectedDevice);
-                MyCameraPlugin.Log("Done");
+                Logger.Log("    Selected Device: " + selectedDevice);
+                Logger.Log("Done");
             }
             FriesBSCameraPlugin.AudioCapture.ReadData(_rawData, _rawData.Length);
 
@@ -371,11 +366,11 @@ namespace AudioLink.Scripts
             //             }
 
             GetSamples();
-//             foreach (var b in _audioFramesL)
-//             {
-//                 MyCameraPlugin.Log(b.ToString());
-//             }
-            //MyCameraPlugin.Log("Volume: " + FriesBSCameraPlugin.AudioCapture.GetVolume());
+            foreach (var b in _audioFramesL)
+            {
+                Logger.Log(b.ToString());
+            }
+            //Logger.Log("Volume: " + FriesBSCameraPlugin.AudioCapture.GetVolume());
 
             Array.Copy(_audioFramesL, 0, _samples, 0, 1023); // 4092 - 1023 * 4
             _audioMaterial.SetFloatArray(_samples0L, _samples);

@@ -82,14 +82,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
     public List<int> previousCameraIndices = new List<int>();
 
-    public static StreamWriter logStream;
-
     private int _frameLogAttemptCounter = 0;
-
-    AudioLink.Scripts.AudioLink _audioLink = null;
-
-    System.Threading.Timer _audioLinkTimer;
-
 
     // Constructor is called when plugin loads
     public MyCameraPlugin()
@@ -103,57 +96,24 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     {
         helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask |= 1 << 9;
         helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
-        Application.logMessageReceived += LogError;
-
-        string docPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        string outputLoc = Path.Combine(docPath, @"LIV\Plugins\CameraBehaviours\FriesBSCam\");
+        Application.logMessageReceived += Logger.LogError;
 
         // Create the directory in the off-chance that it doesn't exist.
-        Directory.CreateDirectory(outputLoc);
 
-        outputLoc = Path.Combine(outputLoc, "output.txt");
-        logStream = new StreamWriter(outputLoc);
-
-        Log("Startup");
-
-        if (_audioLink == null)
-        {
-            Log("Starting AudioLink");
-            _audioLink = new AudioLink.Scripts.AudioLink();
-            Log("AudioLink Started");
-        }
-
-        Log("Loading Settings");
+        Logger.Log("Startup");
+        Logger.Log("Loading Settings");
         CameraPluginSettings.LoadSettings();
-        Log("Done Loading Settings");
-        Log("Camera Count: " + CameraPluginSettings.CameraDataList.Count);
+        Logger.Log("Done Loading Settings");
+        Logger.Log("Camera Count: " + CameraPluginSettings.CameraDataList.Count);
 
         _helper = helper;
 
         beatSaberStatus = new BeatSaberStatus();
 
-        Log("FOV: " + CameraPluginSettings.FOV);
+        Logger.Log("FOV: " + CameraPluginSettings.FOV);
         _helper.UpdateFov(CameraPluginSettings.FOV);
         UpdateCameraChange();
 
-    }
-
-    public void LogError(string condition, string stackTrace, LogType type)
-    {
-        if(type == LogType.Error)
-        {
-            Log(condition);
-            Log(stackTrace);
-        }
-    }
-
-    public static void Log(string s)
-    {
-        if (true)
-        {
-            logStream.WriteLine(s);
-            logStream.Flush();
-        }
     }
 
     // OnSettingsDeserialized is called only when the user has changed camera profile or when the.
@@ -179,7 +139,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             if (inGame)
             {
-                Log("Transitioning to inMenu");
+                Logger.Log("Transitioning to inMenu");
                 inGame = false;
                 _elapsedTime = 2.0f;
                 _nextChangeTimer = 1.0f;
@@ -188,10 +148,10 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 // If we previously were in a Song Specific settings file, go back to the default settings file
                 // if (CameraPluginSettings.SongSpecific) // try loading the setting each time we go into the menu - they can become corrupt when beat saber restarts
                 {
-                    Log("Loading up default settings file");
+                    Logger.Log("Loading up default settings file");
                     CameraPluginSettings.LoadSettings();
-                    Log("Done Loading Settings");
-                    Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
+                    Logger.Log("Done Loading Settings");
+                    Logger.Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
                 }
             }
             else
@@ -205,7 +165,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         {
             if (!inGame)
             {
-                Log("Transitioning to inGame");
+                Logger.Log("Transitioning to inGame");
                 inGame = true;
                 _elapsedTime = 2.0f;
                 _nextChangeTimer = 1.0f;
@@ -213,21 +173,21 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 if (useHttpStatus)
                 {
                     // If HTTPStatus is available, see if we can extract some of the song details
-                    Log("Song Name: " + beatSaberStatus.songName);
-                    Log("Song SubName: " + beatSaberStatus.songSubName);
-                    Log("Song AuthorName: " + beatSaberStatus.songAuthorName);
-                    Log("Level Author: " + beatSaberStatus.levelAuthorName);
-                    Log("Song Hash: " + beatSaberStatus.songHash);
-                    Log("Level ID: " + beatSaberStatus.levelId);
+                    Logger.Log("Song Name: " + beatSaberStatus.songName);
+                    Logger.Log("Song SubName: " + beatSaberStatus.songSubName);
+                    Logger.Log("Song AuthorName: " + beatSaberStatus.songAuthorName);
+                    Logger.Log("Level Author: " + beatSaberStatus.levelAuthorName);
+                    Logger.Log("Song Hash: " + beatSaberStatus.songHash);
+                    Logger.Log("Level ID: " + beatSaberStatus.levelId);
 
-                    Log("Other BSS Data:");
-                    Log("score: " + beatSaberStatus.score);
-                    Log("currentMaxScore: " + beatSaberStatus.paused);
-                    Log("connected: " + beatSaberStatus.connected);
-                    Log("menu: " + beatSaberStatus.menu);
+                    Logger.Log("Other BSS Data:");
+                    Logger.Log("score: " + beatSaberStatus.score);
+                    Logger.Log("currentMaxScore: " + beatSaberStatus.paused);
+                    Logger.Log("connected: " + beatSaberStatus.connected);
+                    Logger.Log("menu: " + beatSaberStatus.menu);
 
                     // We need to check to see if there is a song-specific settings file, and if so, load that instead
-                    Log("Checking to see if there are song-specific Settings");
+                    Logger.Log("Checking to see if there are song-specific Settings");
 
                     if (beatSaberStatus.songHash != null && beatSaberStatus.songHash != "")
                     {
@@ -236,11 +196,11 @@ public class MyCameraPlugin : IPluginCameraBehaviour
 
                     if (CameraPluginSettings.SongSpecific)
                     {
-                        Log("Song specific settings found!");
-                        Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
+                        Logger.Log("Song specific settings found!");
+                        Logger.Log("New Camera Count: " + CameraPluginSettings.CameraDataList.Count);
                     }
                     else
-                        Log("No song specific settings file found");
+                        Logger.Log("No song specific settings file found");
                 }
             }
         }
@@ -261,8 +221,6 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // and has not been updated yet. If that is a concern, it is recommended to use OnLateUpdate instead.
     public void OnUpdate()
     {
-        _audioLink.Tick();
-
         // Allows us to track when HTTPStatus first makes a connecction
         if (!useHttpStatus && beatSaberStatus.connected)
         {
@@ -276,7 +234,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             if (CameraPluginSettings.Debug && beatSaberStatus.debug.Count > 0)
             {
                 // Write debug messages from HTTPStatus
-                Log("BSS: " + beatSaberStatus.debug[0]);
+                Logger.Log("BSS: " + beatSaberStatus.debug[0]);
                 beatSaberStatus.debug.RemoveAt(0);
             }
 
@@ -390,14 +348,14 @@ public class MyCameraPlugin : IPluginCameraBehaviour
     // The camera behaviour should clean everything it created when the behaviour is deactivated.
     public void OnDeactivate()
     {
-        Log("Camera plugin OnDeactivate.");
-        Log("    Sutdown Audio Capture.");
+        Logger.Log("Camera plugin OnDeactivate.");
+        Logger.Log("    Sutdown Audio Capture.");
         var res = FriesBSCameraPlugin.AudioCapture.Shutdown();
-        Log("    Audio Capture result: " + res);
+        Logger.Log("    Audio Capture result: " + res);
         beatSaberStatus.shutDown();
         _helper.behaviour.manager.camera.behaviour.mainCamera.cullingMask &= ~(1 << 9);
-        Log("Camera Deactivate Done.");
-        logStream.Close();
+        Logger.Log("Camera Deactivate Done.");
+        //Logger.Close();
     }
 
     // OnDestroy is called when the users selects a camera behaviour which is not a plugin or when the application is about to close.
@@ -411,33 +369,33 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         _timeSinceSceneStarted = 0;
 
         cameraLerpValue = 0.02f;
-        Log("New Camera Selection started");
+        Logger.Log("New Camera Selection started");
 
         var newCameraIndex = currentCameraIndex;
 
         if (transitionToMenu)
         {
             // Transition to the Menu Camera and mark that we've done so. Update currentCameraIndex to -1 so we don't skip over Index 0 when we move to another camera
-            Log("Preparing to change to Menu Camera");
+            Logger.Log("Preparing to change to Menu Camera");
             transitionToMenu = false;
             currentCameraIndex = -1;
             currentCameraData = CameraPluginSettings.MenuCamera;
             currentCameraType = currentCameraData.Type;
-            Log(currentCameraData.ToString());
+            Logger.Log(currentCameraData.ToString());
         }
         else
         {
-            Log("Preparing to change to new Game Camera, currentCameraIndex = " + currentCameraIndex.ToString());
+            Logger.Log("Preparing to change to new Game Camera, currentCameraIndex = " + currentCameraIndex.ToString());
             if (CameraPluginSettings.SongSpecific)
             {
-                Log("Song specific settings file active, increment to next camera");
+                Logger.Log("Song specific settings file active, increment to next camera");
                 // Increment camera by 1 but make sure we don't skip over index 0 now
                 if (newCameraIndex < CameraPluginSettings.CameraDataList.Count)
                     newCameraIndex++;
             }
             else
             {
-                Log("Default settings file active, preparing to pick next camera");
+                Logger.Log("Default settings file active, preparing to pick next camera");
                 // If we don't have enough cameras to truly randomize...uh...I guess don't
                 if (CameraPluginSettings.CameraDataList.Count > 2)
                 {
@@ -449,7 +407,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 }
                 else if (CameraPluginSettings.CameraDataList.Count == 2)
                 {
-                    Log("Only 2 cameras available, swapping between them");
+                    Logger.Log("Only 2 cameras available, swapping between them");
                     // If you've got two cameras switch between them, otherwise just stick with the current one
                     switch (currentCameraIndex)
                     {
@@ -491,8 +449,8 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                 _nextChangeTimer = _elapsedTime + minTime + (float)(rand.NextDouble() * (maxTime - minTime));
             }
 
-            Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + _nextChangeTimer.ToString() + "s");
-            Log(_timeSinceSceneStarted.ToString() + "s since last scene change.");
+            Logger.Log("New Camera: " + newCameraIndex + ", " + currentCameraData.Name + ", " + currentCameraData.Type.ToString() + ", " + _nextChangeTimer.ToString() + "s");
+            Logger.Log(_timeSinceSceneStarted.ToString() + "s since last scene change.");
         }
 
         switch (currentCameraType)
@@ -526,12 +484,12 @@ public class MyCameraPlugin : IPluginCameraBehaviour
                     currentOrbitalDistance = (CurrentCameraPosition - targetPosition).magnitude;
                     orbitalDistance = currentCameraData.Distance;
 
-                    Log("orbitalDirection: " + orbitalDirection);
-                    Log("currentOrbitalHeight: " + currentOrbitalHeight);
-                    Log("orbitalHeightTarget: " + orbitalHeightTarget);
-                    Log("currentOrbitalDistance: " + currentOrbitalDistance);
-                    Log("orbitalDistance: " + orbitalDistance);
-                    Log("currentOrbitalAngle: " + currentOrbitalAngle);
+                    Logger.Log("orbitalDirection: " + orbitalDirection);
+                    Logger.Log("currentOrbitalHeight: " + currentOrbitalHeight);
+                    Logger.Log("orbitalHeightTarget: " + orbitalHeightTarget);
+                    Logger.Log("currentOrbitalDistance: " + currentOrbitalDistance);
+                    Logger.Log("orbitalDistance: " + orbitalDistance);
+                    Logger.Log("currentOrbitalAngle: " + currentOrbitalAngle);
 
                     break;
                 }
@@ -553,7 +511,7 @@ public class MyCameraPlugin : IPluginCameraBehaviour
             transitionCurveType = currentCameraData.TransitionCurve,
         };
 
-        Log("New Camera Transition:" + currentCameraTransition.ToString());
+        Logger.Log("New Camera Transition:" + currentCameraTransition.ToString());
     }
 
     private void UpdateGameCameraPose(Vector3 position, Quaternion rotation)
@@ -564,11 +522,11 @@ public class MyCameraPlugin : IPluginCameraBehaviour
         _frameLogAttemptCounter += 1;
         if(_frameLogAttemptCounter % 30 == 0)
         {
-            Log("\tScene Time: " + Math.Round(_timeSinceSceneStarted, 2).ToString() );
-            Log("\tElapsedTime Time: " + Math.Round(_elapsedTime, 2).ToString() );
-            Log("\tNextChangeTimer: " + Math.Round(_nextChangeTimer, 2).ToString() );
-            Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString());
-            Log("\tPaused: " + (useHttpStatus && beatSaberStatus.paused).ToString() + "\n");
+            Logger.Log("\tScene Time: " + Math.Round(_timeSinceSceneStarted, 2).ToString() );
+            Logger.Log("\tElapsedTime Time: " + Math.Round(_elapsedTime, 2).ToString() );
+            Logger.Log("\tNextChangeTimer: " + Math.Round(_nextChangeTimer, 2).ToString() );
+            Logger.Log("\tPosition: " + position.ToString() + "\n\tRotation: " + rotation.ToString());
+            Logger.Log("\tPaused: " + (useHttpStatus && beatSaberStatus.paused).ToString() + "\n");
         }
     }
 }
